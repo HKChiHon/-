@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3J功課大屏</title>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <style>
         /* MTR Font Stack & Styling */
         @font-family {
@@ -44,6 +47,45 @@
             font-weight: 300;
             -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
+        }
+
+        /* Update Notification Banner for Students */
+        .notification-banner {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(90deg, #ff9900, #ff5500);
+            color: #ffffff;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 4px 20px rgba(255, 153, 0, 0.6);
+            z-index: 3000;
+            animation: slideDown 0.4s ease, pulse 1.5s infinite;
+        }
+
+        @keyframes slideDown {
+            from { transform: translate(-50%, -50px); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 10px rgba(255, 153, 0, 0.5); }
+            50% { box-shadow: 0 0 25px rgba(255, 153, 0, 0.9); }
+            100% { box-shadow: 0 0 10px rgba(255, 153, 0, 0.5); }
+        }
+
+        /* Row Highlight Animation on Remote Update */
+        .row-updated {
+            animation: highlightRow 2.5s ease-out;
+        }
+
+        @keyframes highlightRow {
+            0% { background-color: rgba(255, 204, 0, 0.6) !important; }
+            100% { background-color: transparent; }
         }
 
         /* Responsive Main Container */
@@ -632,6 +674,11 @@
 </head>
 <body>
 
+<!-- Student Realtime Notification Banner -->
+<div id="notificationBanner" class="notification-banner">
+    📢 功課資料已由老師/管理員更新！
+</div>
+
 <!-- Terms of Use Disclaimer Modal Overlay -->
 <div class="terms-modal-overlay" id="termsModal">
     <div class="terms-card">
@@ -745,6 +792,15 @@
 </div>
 
 <script>
+    // Firebase Setup
+    const firebaseConfig = {
+        databaseURL: "https://homework-board-3j-default-rtdb.firebaseio.com"
+    };
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const dbRef = firebase.database().ref("homeworkData");
+
     // System Password
     const EDIT_PASSWORD = "henry021412";
 
@@ -788,24 +844,59 @@
     let currentSubjectFilter = "ALL";
     let currentSearchTerm = "";
     let isEditing = false;
+    let isFirstLoad = true;
 
     // Initialization
     window.addEventListener("DOMContentLoaded", () => {
         checkDisclaimerConsent();
-        loadData();
-        initMarquee();
         initSubjectFilterButtons();
         updateClock();
-        renderLastUpdateTime();
         setInterval(() => {
             updateClock();
             checkAndAutoUpdateStatuses();
         }, 1000);
-        checkAndAutoUpdateStatuses();
-        render();
+        
+        // Listen for Realtime Sync Changes across all devices
+        dbRef.on("value", (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                homeworkList = data.homeworkList || [];
+                marqueeText = data.marqueeText || DEFAULT_MARQUEE_TEXT;
+                lastUpdateTime = data.lastUpdateTime || "";
+                
+                initMarquee();
+                renderLastUpdateTime();
+                render();
+
+                if (!isFirstLoad && !isEditing) {
+                    showNotificationBanner();
+                    highlightUpdatedRows();
+                }
+            } else {
+                homeworkList = [...DEFAULT_DATA];
+                saveData();
+            }
+            isFirstLoad = false;
+        });
     });
 
-    // Terms of Use Modal Logic (Always displays on every page load)
+    function showNotificationBanner() {
+        const banner = document.getElementById("notificationBanner");
+        banner.style.display = "block";
+        setTimeout(() => {
+            banner.style.display = "none";
+        }, 5000);
+    }
+
+    function highlightUpdatedRows() {
+        const rows = document.querySelectorAll("#homeworkTableBody tr");
+        rows.forEach(row => {
+            row.classList.add("row-updated");
+            setTimeout(() => row.classList.remove("row-updated"), 2500);
+        });
+    }
+
+    // Terms of Use Modal Logic
     function checkDisclaimerConsent() {
         document.getElementById("termsModal").style.display = "flex";
         document.getElementById("agreeCheckbox").checked = false;
@@ -821,36 +912,13 @@
         document.getElementById("termsModal").style.display = "none";
     }
 
-    // Data Storage
-    function loadData() {
-        const saved = localStorage.getItem("3j_homework_data");
-        if (saved) {
-            try {
-                homeworkList = JSON.parse(saved);
-            } catch(e) {
-                homeworkList = [...DEFAULT_DATA];
-            }
-        } else {
-            homeworkList = [...DEFAULT_DATA];
-        }
-
-        const savedMarquee = localStorage.getItem("3j_marquee_text");
-        if (savedMarquee) {
-            marqueeText = savedMarquee;
-        }
-
-        const savedLastUpdate = localStorage.getItem("3j_last_update_time");
-        if (savedLastUpdate) {
-            lastUpdateTime = savedLastUpdate;
-        }
-    }
-
+    // Data Storage with Realtime Sync
     function saveData() {
-        localStorage.setItem("3j_homework_data", JSON.stringify(homeworkList));
-        localStorage.setItem("3j_marquee_text", marqueeText);
-        if (lastUpdateTime) {
-            localStorage.setItem("3j_last_update_time", lastUpdateTime);
-        }
+        dbRef.set({
+            homeworkList: homeworkList,
+            marqueeText: marqueeText,
+            lastUpdateTime: lastUpdateTime
+        });
     }
 
     function updateLastEditTimestamp() {
@@ -883,6 +951,7 @@
     function updateMarqueeText(val) {
         marqueeText = val || DEFAULT_MARQUEE_TEXT;
         document.getElementById("marqueeDisplay").textContent = marqueeText;
+        updateLastEditTimestamp();
         saveData();
     }
 
@@ -964,17 +1033,19 @@
     // Password Security Logic
     function handleEditClick() {
         if (isEditing) {
-            toggleEditMode();
+            toggleEditingMode(false);
+            updateLastEditTimestamp();
+            saveData();
         } else {
             openPasswordModal();
         }
     }
 
     function openPasswordModal() {
-        document.getElementById("passwordModal").style.display = "flex";
         document.getElementById("pwdInput").value = "";
         document.getElementById("modalError").style.display = "none";
-        document.getElementById("pwdInput").focus();
+        document.getElementById("passwordModal").style.display = "flex";
+        setTimeout(() => document.getElementById("pwdInput").focus(), 100);
     }
 
     function closePasswordModal() {
@@ -982,57 +1053,33 @@
     }
 
     function verifyPassword() {
-        const input = document.getElementById("pwdInput").value;
-        if (input === EDIT_PASSWORD) {
+        const entered = document.getElementById("pwdInput").value;
+        if (entered === EDIT_PASSWORD) {
             closePasswordModal();
-            toggleEditMode();
+            toggleEditingMode(true);
         } else {
             document.getElementById("modalError").style.display = "block";
         }
     }
 
-    function toggleEditMode() {
+    function toggleEditingMode(enable) {
+        isEditing = enable;
+        const app = document.getElementById("app");
+        const btn = document.getElementById("btnEditToggle");
+
         if (isEditing) {
-            // Ending edit mode: Save changed inputs into data
-            const rows = document.querySelectorAll("#homeworkTableBody tr");
-            rows.forEach(tr => {
-                const index = tr.dataset.index;
-                if (index !== undefined && homeworkList[index]) {
-                    const idInput = tr.querySelector(".edit-id");
-                    const taskInput = tr.querySelector(".edit-task");
-                    const subjectSelect = tr.querySelector(".edit-subject");
-                    const dateInput = tr.querySelector(".edit-date");
-                    const statusSelect = tr.querySelector(".edit-status");
-
-                    if (idInput) homeworkList[index].id = idInput.value;
-                    if (taskInput) homeworkList[index].task = taskInput.value;
-                    if (subjectSelect) homeworkList[index].subject = subjectSelect.value;
-                    if (dateInput) homeworkList[index].date = dateInput.value;
-                    if (statusSelect) homeworkList[index].status = statusSelect.value;
-                }
-            });
-
-            isEditing = false;
-            document.getElementById("app").classList.remove("editing-mode");
-            const btn = document.getElementById("btnEditToggle");
+            app.classList.add("editing-mode");
+            btn.classList.add("editing");
+            btn.innerHTML = "✔ 完成編輯";
+        } else {
+            app.classList.remove("editing-mode");
             btn.classList.remove("editing");
             btn.innerHTML = "✏ 編輯";
-            
-            updateLastEditTimestamp();
-            saveData();
-            checkAndAutoUpdateStatuses();
-            render();
-        } else {
-            isEditing = true;
-            document.getElementById("app").classList.add("editing-mode");
-            const btn = document.getElementById("btnEditToggle");
-            btn.classList.add("editing");
-            btn.innerHTML = "💾 完成編輯";
-            render();
         }
+        render();
     }
 
-    // Filter Logic
+    // Filters and Search
     function setStatusFilter(status) {
         currentStatusFilter = status;
         document.querySelectorAll("#statusFilterGroup .filter-btn").forEach(btn => {
@@ -1055,14 +1102,8 @@
         currentSearchTerm = "";
         document.getElementById("searchInput").value = "";
 
-        document.querySelectorAll("#statusFilterGroup .filter-btn").forEach(btn => {
-            btn.classList.toggle("active", btn.dataset.status === "ALL");
-        });
-        document.querySelectorAll("#subjectFilterGroup .filter-btn").forEach(btn => {
-            btn.classList.toggle("active", btn.dataset.subject === "ALL");
-        });
-
-        render();
+        setStatusFilter("ALL");
+        setSubjectFilter("ALL");
     }
 
     function onSearchInput(val) {
@@ -1070,96 +1111,89 @@
         render();
     }
 
+    // Editing Logic
+    function updateRowItem(index, field, value) {
+        homeworkList[index][field] = value;
+        updateLastEditTimestamp();
+        saveData();
+        updateStatsAndCounts();
+    }
+
     function addNewRow() {
-        homeworkList.unshift({
-            id: "NEW" + String(Math.floor(Math.random() * 900) + 100),
-            task: "新功課項",
-            subject: SUBJECT_LIST[1] || "中國語文",
-            date: "10/10/2026",
-            status: "待截止"
-        });
+        homeworkList.push({ id: "", task: "", subject: "", date: "", status: "待截止" });
+        updateLastEditTimestamp();
+        saveData();
         render();
     }
 
     function deleteRow(index) {
         homeworkList.splice(index, 1);
+        updateLastEditTimestamp();
         saveData();
         render();
     }
 
-    function updateRowField(index, field, value) {
-        if (homeworkList[index]) {
-            homeworkList[index][field] = value;
-        }
-    }
-
-    // Rendering Logic
+    // Render Logic
     function render() {
         const tbody = document.getElementById("homeworkTableBody");
         tbody.innerHTML = "";
 
-        let filtered = homeworkList.filter(item => {
-            if (currentStatusFilter !== "ALL" && item.status !== currentStatusFilter) {
-                return false;
-            }
-            if (currentSubjectFilter !== "ALL" && item.subject !== currentSubjectFilter) {
-                return false;
-            }
-            if (currentSearchTerm) {
-                const searchStr = `${item.id} ${item.task} ${item.subject}`.toLowerCase();
-                if (!searchStr.includes(currentSearchTerm)) {
-                    return false;
+        let visibleCount = 0;
+
+        homeworkList.forEach((item, index) => {
+            const matchesStatus = currentStatusFilter === "ALL" || item.status === currentStatusFilter;
+            const matchesSubject = currentSubjectFilter === "ALL" || item.subject === currentSubjectFilter;
+            const matchesSearch = !currentSearchTerm || 
+                (item.id && item.id.toLowerCase().includes(currentSearchTerm)) ||
+                (item.task && item.task.toLowerCase().includes(currentSearchTerm)) ||
+                (item.subject && item.subject.toLowerCase().includes(currentSearchTerm));
+
+            if (matchesStatus && matchesSubject && matchesSearch) {
+                visibleCount++;
+                const tr = document.createElement("tr");
+
+                if (isEditing) {
+                    tr.innerHTML = `
+                        <td><input class="editable-input" value="${item.id || ''}" onchange="updateRowItem(${index}, 'id', this.value)"></td>
+                        <td><input class="editable-input" value="${item.task || ''}" onchange="updateRowItem(${index}, 'task', this.value)"></td>
+                        <td>
+                            <select class="editable-select" onchange="updateRowItem(${index}, 'subject', this.value)">
+                                <option value="">--請選擇--</option>
+                                ${SUBJECT_LIST.filter(s => s !== "全部").map(s => `<option value="${s}" ${s === item.subject ? 'selected' : ''}>${s}</option>`).join('')}
+                            </select>
+                        </td>
+                        <td><input class="editable-input" value="${item.date || ''}" placeholder="D/M/YYYY" onchange="updateRowItem(${index}, 'date', this.value)"></td>
+                        <td>
+                            <select class="editable-select" onchange="updateRowItem(${index}, 'status', this.value)">
+                                <option value="">--請選擇--</option>
+                                ${STATUS_LIST.map(st => `<option value="${st}" ${st === item.status ? 'selected' : ''}>${st}</option>`).join('')}
+                            </select>
+                        </td>
+                        <td class="td-actions"><button class="btn-delete" onclick="deleteRow(${index})">刪除</button></td>
+                    `;
+                } else {
+                    tr.innerHTML = `
+                        <td>${item.id || '-'}</td>
+                        <td>${item.task || '-'}</td>
+                        <td>${item.subject || '-'}</td>
+                        <td>${item.date || '-'}</td>
+                        <td class="status-${item.status}">${item.status || '-'}</td>
+                        <td class="td-actions"></td>
+                    `;
                 }
+                tbody.appendChild(tr);
             }
-            return true;
         });
 
-        if (filtered.length === 0) {
-            document.getElementById("emptyMessage").style.display = "block";
-        } else {
-            document.getElementById("emptyMessage").style.display = "none";
-        }
+        document.getElementById("emptyMessage").style.display = visibleCount === 0 ? "block" : "none";
+        document.getElementById("recordCounter").textContent = `顯示 ${visibleCount} 項 / 共 ${homeworkList.length} 項`;
 
-        filtered.forEach((item) => {
-            const originalIndex = homeworkList.indexOf(item);
-            const tr = document.createElement("tr");
-            tr.dataset.index = originalIndex;
+        updateStatsAndCounts();
+    }
 
-            if (isEditing) {
-                // Subject options
-                let subjectOptions = SUBJECT_LIST.filter(s => s !== "全部").map(s => 
-                    `<option value="${s}" ${item.subject === s ? "selected" : ""}>${s}</option>`
-                ).join("");
-
-                // Status options
-                let statusOptions = STATUS_LIST.map(s => 
-                    `<option value="${s}" ${item.status === s ? "selected" : ""}>${s}</option>`
-                ).join("");
-
-                tr.innerHTML = `
-                    <td><input type="text" class="editable-input edit-id" value="${item.id}" onchange="updateRowField(${originalIndex}, 'id', this.value)"></td>
-                    <td><input type="text" class="editable-input edit-task" value="${item.task}" onchange="updateRowField(${originalIndex}, 'task', this.value)"></td>
-                    <td><select class="editable-select edit-subject" onchange="updateRowField(${originalIndex}, 'subject', this.value)">${subjectOptions}</select></td>
-                    <td><input type="text" class="editable-input edit-date" value="${item.date}" onchange="updateRowField(${originalIndex}, 'date', this.value)"></td>
-                    <td><select class="editable-select edit-status" onchange="updateRowField(${originalIndex}, 'status', this.value)">${statusOptions}</select></td>
-                    <td class="td-actions"><button class="btn-delete" onclick="deleteRow(${originalIndex})">刪除</button></td>
-                `;
-            } else {
-                tr.innerHTML = `
-                    <td>${item.id || "-"}</td>
-                    <td>${item.task || "-"}</td>
-                    <td>${item.subject || "-"}</td>
-                    <td>${item.date || "-"}</td>
-                    <td class="status-${item.status}">${item.status || "-"}</td>
-                    <td class="td-actions"></td>
-                `;
-            }
-
-            tbody.appendChild(tr);
-        });
-
-        // Update Statistics
+    function updateStatsAndCounts() {
         const counts = { "即將截止": 0, "已截止": 0, "待截止": 0, "晚點": 0, "待發放": 0 };
+
         homeworkList.forEach(item => {
             if (counts[item.status] !== undefined) {
                 counts[item.status]++;
@@ -1171,11 +1205,7 @@
         document.getElementById("countPending").textContent = counts["待截止"];
         document.getElementById("countLate").textContent = counts["晚點"];
         document.getElementById("countUnissued").textContent = counts["待發放"];
-
-        // Update Counter display
-        document.getElementById("recordCounter").textContent = `顯示 ${filtered.length} 項 / 共 ${homeworkList.length} 項`;
     }
 </script>
-
 </body>
 </html>
