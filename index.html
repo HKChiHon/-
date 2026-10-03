@@ -745,11 +745,9 @@
 </div>
 
 <script>
-    // System Password
     const EDIT_PASSWORD = "henry021412";
-    const API_BASE_URL = "http://localhost:3000/api";
+    const API_BASE_URL = "/api";
 
-    // Master Subjects list
     const SUBJECT_LIST = [
         "全部", "中國語文", "English Language", "Mathematics", "Chemistry", 
         "Geography", "History", "中國歷史", "公民、經濟及社會", "倫理與宗教", 
@@ -758,29 +756,8 @@
     ];
 
     const STATUS_LIST = ["即將截止", "已截止", "待截止", "晚點", "待發放"];
-
-    // Default Initial Dataset
-    const DEFAULT_DATA = [
-        { id: "PTH001", task: "普通話習作預備稿", subject: "普通話", date: "5/10/2026", status: "待截止" },
-        { id: "CHIN007", task: "作文改正", subject: "中國語文", date: "30/9/2026", status: "已截止" },
-        { id: "CHIN009", task: "課後延伸", subject: "中國語文", date: "5/10/2026", status: "待截止" },
-        { id: "ENG010", task: "VRSS p.47-48", subject: "English Language", date: "7/10/2026", status: "待截止" },
-        { id: "CHIN006", task: "課文測驗", subject: "中國語文", date: "22/10/2026", status: "晚點" },
-        { id: "ENG009", task: "Borrow an English Book", subject: "English Language", date: "30/9/2026", status: "已截止" },
-        { id: "BIO003", task: "WS p.7-10", subject: "Biology", date: "2/10/2026", status: "已截止" },
-        { id: "HIST002", task: "Reading Task", subject: "History", date: "30/9/2026", status: "已截止" },
-        { id: "GOEG005", task: "Complete the WHOLE map reading workbook", subject: "Geography", date: "6/10/2026", status: "待截止" },
-        { id: "E&RE001", task: "Note P.5 (Case 2)", subject: "倫理與宗教", date: "30/9/2026", status: "已截止" },
-        { id: "VA005", task: "Carton Carving", subject: "Visual Arts", date: "8/10/2026", status: "待截止" },
-        { id: "CHIN008", task: "詳盡閱讀報告", subject: "中國語文", date: "20/10/2026", status: "待截止" },
-        { id: "ENG011", task: "Unseen Dictation and Vocabulary Quiz", subject: "English Language", date: "9/10/2026", status: "待截止" },
-        { id: "ENG012", task: "GB Unit 4", subject: "English Language", date: "2/10/2026", status: "已截止" },
-        { id: "CHIN004", task: "隨筆 2", subject: "中國語文", date: "7/10/2026", status: "待截止" }
-    ];
-
     const DEFAULT_MARQUEE_TEXT = "📢 歡迎使用 3J 功課大屏！請準時交功課，勤奮學習！";
 
-    // State Variables
     let homeworkList = [];
     let marqueeText = DEFAULT_MARQUEE_TEXT;
     let lastUpdateTime = "";
@@ -789,23 +766,20 @@
     let currentSearchTerm = "";
     let isEditing = false;
 
-    // Initialization
-    window.addEventListener("DOMContentLoaded", async () => {
+    window.addEventListener("DOMContentLoaded", () => {
         checkDisclaimerConsent();
-        await loadData();
-        initMarquee();
         initSubjectFilterButtons();
         updateClock();
-        renderLastUpdateTime();
+        fetchServerData();
+        
         setInterval(() => {
             updateClock();
-            checkAndAutoUpdateStatuses();
-        }, 1000);
-        checkAndAutoUpdateStatuses();
-        render();
+            if (!isEditing) {
+                fetchServerData();
+            }
+        }, 3000);
     });
 
-    // Terms of Use Modal Logic
     function checkDisclaimerConsent() {
         document.getElementById("termsModal").style.display = "flex";
         document.getElementById("agreeCheckbox").checked = false;
@@ -821,50 +795,37 @@
         document.getElementById("termsModal").style.display = "none";
     }
 
-    // SQL Data Storage Integration via API
-    async function loadData() {
+    async function fetchServerData() {
         try {
-            const response = await fetch(`${API_BASE_URL}/data`);
-            if (!response.ok) throw new Error("Database offline");
-            const data = await response.json();
-
-            homeworkList = data.homework || [];
-            if (data.settings && data.settings.marqueeText) {
-                marqueeText = data.settings.marqueeText;
-            }
-            if (data.settings && data.settings.lastUpdateTime) {
-                lastUpdateTime = data.settings.lastUpdateTime;
+            const res = await fetch(`${API_BASE_URL}/data`);
+            if (res.ok) {
+                const data = await res.json();
+                homeworkList = data.homeworkList || [];
+                marqueeText = data.marqueeText || DEFAULT_MARQUEE_TEXT;
+                lastUpdateTime = data.lastUpdateTime || '';
+                initMarquee();
+                renderLastUpdateTime();
+                checkAndAutoUpdateStatuses();
+                render();
             }
         } catch (err) {
-            console.warn("SQL Server connection failed, using LocalStorage fallback:", err.message);
-            const saved = localStorage.getItem("3j_homework_data");
-            homeworkList = saved ? JSON.parse(saved) : [...DEFAULT_DATA];
-            marqueeText = localStorage.getItem("3j_marquee_text") || DEFAULT_MARQUEE_TEXT;
-            lastUpdateTime = localStorage.getItem("3j_last_update_time") || "";
+            console.error("Error fetching data from server:", err);
         }
     }
 
-    async function saveData() {
-        // Backup to LocalStorage
-        localStorage.setItem("3j_homework_data", JSON.stringify(homeworkList));
-        localStorage.setItem("3j_marquee_text", marqueeText);
-        if (lastUpdateTime) {
-            localStorage.setItem("3j_last_update_time", lastUpdateTime);
-        }
-
-        // Save to SQL Database
+    async function saveServerData() {
         try {
             await fetch(`${API_BASE_URL}/save`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    homework: homeworkList,
+                    homeworkList: homeworkList,
                     marqueeText: marqueeText,
                     lastUpdateTime: lastUpdateTime
                 })
             });
         } catch (err) {
-            console.error("Failed to save to SQL Database:", err);
+            console.error("Error saving data to server:", err);
         }
     }
 
@@ -889,19 +850,18 @@
         }
     }
 
-    // Marquee
     function initMarquee() {
         document.getElementById("marqueeDisplay").textContent = marqueeText;
-        document.getElementById("marqueeInput").value = marqueeText;
+        if (document.activeElement !== document.getElementById("marqueeInput")) {
+            document.getElementById("marqueeInput").value = marqueeText;
+        }
     }
 
     function updateMarqueeText(val) {
         marqueeText = val || DEFAULT_MARQUEE_TEXT;
         document.getElementById("marqueeDisplay").textContent = marqueeText;
-        saveData();
     }
 
-    // Auto update logic based on dates
     function parseDueDate(dateStr) {
         if (!dateStr) return null;
         const parts = dateStr.split('/');
@@ -947,8 +907,7 @@
         }
 
         if (changed) {
-            saveData();
-            render();
+            saveServerData();
         }
     }
 
@@ -976,27 +935,22 @@
         });
     }
 
-    // Password Security & Editing Logic
     function handleEditClick() {
-        if (isEditing) {
-            saveCurrentEdits();
+        if (!isEditing) {
+            document.getElementById("pwdInput").value = "";
+            document.getElementById("modalError").style.display = "none";
+            document.getElementById("passwordModal").style.display = "flex";
+            document.getElementById("pwdInput").focus();
+        } else {
             isEditing = false;
+            updateLastEditTimestamp();
+            saveServerData();
             document.getElementById("app").classList.remove("editing-mode");
             const btn = document.getElementById("btnEditToggle");
+            btn.textContent = "✏ 編輯";
             btn.classList.remove("editing");
-            btn.innerHTML = "✏ 編輯";
-            saveData();
             render();
-        } else {
-            openPasswordModal();
         }
-    }
-
-    function openPasswordModal() {
-        document.getElementById("pwdInput").value = "";
-        document.getElementById("modalError").style.display = "none";
-        document.getElementById("passwordModal").style.display = "flex";
-        document.getElementById("pwdInput").focus();
     }
 
     function closePasswordModal() {
@@ -1006,70 +960,34 @@
     function verifyPassword() {
         const pwd = document.getElementById("pwdInput").value;
         if (pwd === EDIT_PASSWORD) {
-            closePasswordModal();
             isEditing = true;
+            closePasswordModal();
             document.getElementById("app").classList.add("editing-mode");
             const btn = document.getElementById("btnEditToggle");
+            btn.textContent = "💾 儲存並退出";
             btn.classList.add("editing");
-            btn.innerHTML = "💾 儲存並退出";
             render();
         } else {
             document.getElementById("modalError").style.display = "block";
         }
     }
 
-    function saveCurrentEdits() {
-        const tbody = document.getElementById("homeworkTableBody");
-        const rows = tbody.querySelectorAll("tr");
-        
-        rows.forEach(row => {
-            const index = row.dataset.index;
-            if (index !== undefined && homeworkList[index]) {
-                const idInput = row.querySelector(".edit-id");
-                const taskInput = row.querySelector(".edit-task");
-                const subjectSelect = row.querySelector(".edit-subject");
-                const dateInput = row.querySelector(".edit-date");
-                const statusSelect = row.querySelector(".edit-status");
-
-                if (idInput) homeworkList[index].id = idInput.value;
-                if (taskInput) homeworkList[index].task = taskInput.value;
-                if (subjectSelect) homeworkList[index].subject = subjectSelect.value;
-                if (dateInput) homeworkList[index].date = dateInput.value;
-                if (statusSelect) homeworkList[index].status = statusSelect.value;
-            }
-        });
-        updateLastEditTimestamp();
-    }
-
-    function addNewRow() {
-        homeworkList.unshift({
-            id: "NEW" + String(Math.floor(Math.random() * 900) + 100),
-            task: "",
-            subject: SUBJECT_LIST[1],
-            date: "",
-            status: "待截止"
-        });
-        render();
-    }
-
-    function deleteRow(index) {
-        homeworkList.splice(index, 1);
-        render();
-    }
-
-    // Filters & Search
     function setStatusFilter(status) {
         currentStatusFilter = status;
-        document.querySelectorAll("#statusFilterGroup .filter-btn").forEach(btn => {
-            btn.classList.toggle("active", btn.dataset.status === status);
+        const buttons = document.querySelectorAll("#statusFilterGroup .filter-btn");
+        buttons.forEach(btn => {
+            if (btn.dataset.status === status) btn.classList.add("active");
+            else btn.classList.remove("active");
         });
         render();
     }
 
     function setSubjectFilter(subject) {
         currentSubjectFilter = subject;
-        document.querySelectorAll("#subjectFilterGroup .filter-btn").forEach(btn => {
-            btn.classList.toggle("active", btn.dataset.subject === subject);
+        const buttons = document.querySelectorAll("#subjectFilterGroup .filter-btn");
+        buttons.forEach(btn => {
+            if (btn.dataset.subject === subject) btn.classList.add("active");
+            else btn.classList.remove("active");
         });
         render();
     }
@@ -1094,64 +1012,86 @@
         render();
     }
 
-    // Render Logic
+    function updateRowData(index, field, value) {
+        homeworkList[index][field] = value;
+    }
+
+    function deleteRow(index) {
+        homeworkList.splice(index, 1);
+        render();
+    }
+
+    function addNewRow() {
+        homeworkList.unshift({ id: "", task: "", subject: "", date: "", status: "待截止" });
+        render();
+    }
+
+    function updateStats() {
+        const counts = { "即將截止": 0, "已截止": 0, "待截止": 0, "晚點": 0, "待發放": 0 };
+        homeworkList.forEach(item => {
+            if (counts.hasOwnProperty(item.status)) {
+                counts[item.status]++;
+            }
+        });
+
+        document.getElementById("countUpcoming").textContent = counts["即將截止"];
+        document.getElementById("countExpired").textContent = counts["已截止"];
+        document.getElementById("countPending").textContent = counts["待截止"];
+        document.getElementById("countLate").textContent = counts["晚點"];
+        document.getElementById("countUnissued").textContent = counts["待發放"];
+    }
+
     function render() {
+        updateStats();
+
         const tbody = document.getElementById("homeworkTableBody");
         tbody.innerHTML = "";
 
-        // Statistics Counter
-        let countUpcoming = 0, countExpired = 0, countPending = 0, countLate = 0, countUnissued = 0;
-        homeworkList.forEach(item => {
-            if (item.status === "即將截止") countUpcoming++;
-            if (item.status === "已截止") countExpired++;
-            if (item.status === "待截止") countPending++;
-            if (item.status === "晚點") countLate++;
-            if (item.status === "待發放") countUnissued++;
+        const filtered = homeworkList.filter((item) => {
+            if (currentStatusFilter !== "ALL" && item.status !== currentStatusFilter) return false;
+            if (currentSubjectFilter !== "ALL" && item.subject !== currentSubjectFilter) return false;
+            if (currentSearchTerm) {
+                const matchId = (item.id || "").toLowerCase().includes(currentSearchTerm);
+                const matchTask = (item.task || "").toLowerCase().includes(currentSearchTerm);
+                const matchSub = (item.subject || "").toLowerCase().includes(currentSearchTerm);
+                if (!matchId && !matchTask && !matchSub) return false;
+            }
+            return true;
         });
 
-        document.getElementById("countUpcoming").textContent = countUpcoming;
-        document.getElementById("countExpired").textContent = countExpired;
-        document.getElementById("countPending").textContent = countPending;
-        document.getElementById("countLate").textContent = countLate;
-        document.getElementById("countUnissued").textContent = countUnissued;
-
-        // Filter Application
-        const filtered = homeworkList.filter((item, idx) => {
-            item._originalIndex = idx;
-            const matchStatus = (currentStatusFilter === "ALL") || (item.status === currentStatusFilter);
-            const matchSubject = (currentSubjectFilter === "ALL") || (item.subject === currentSubjectFilter);
-            
-            const matchSearch = !currentSearchTerm || 
-                (item.id && item.id.toLowerCase().includes(currentSearchTerm)) ||
-                (item.task && item.task.toLowerCase().includes(currentSearchTerm)) ||
-                (item.subject && item.subject.toLowerCase().includes(currentSearchTerm));
-
-            return matchStatus && matchSubject && matchSearch;
-        });
-
-        document.getElementById("emptyMessage").style.display = filtered.length === 0 ? "block" : "none";
         document.getElementById("recordCounter").textContent = `顯示 ${filtered.length} 項 / 共 ${homeworkList.length} 項`;
+        document.getElementById("emptyMessage").style.display = filtered.length === 0 ? "block" : "none";
 
-        filtered.forEach(item => {
+        filtered.forEach((item) => {
+            const realIndex = homeworkList.indexOf(item);
             const tr = document.createElement("tr");
-            tr.dataset.index = item._originalIndex;
 
             if (isEditing) {
-                let subjectOptions = SUBJECT_LIST.filter(s => s !== "全部").map(s => 
-                    `<option value="${s}" ${s === item.subject ? "selected" : ""}>${s}</option>`
-                ).join("");
-
-                let statusOptions = STATUS_LIST.map(s => 
-                    `<option value="${s}" ${s === item.status ? "selected" : ""}>${s}</option>`
-                ).join("");
+                const optionsSub = SUBJECT_LIST.filter(s => s !== "全部")
+                    .map(s => `<option value="${s}" ${s === item.subject ? 'selected' : ''}>${s}</option>`).join('');
+                
+                const optionsStatus = STATUS_LIST
+                    .map(st => `<option value="${st}" ${st === item.status ? 'selected' : ''}>${st}</option>`).join('');
 
                 tr.innerHTML = `
-                    <td><input type="text" class="editable-input edit-id" value="${item.id || ''}"></td>
-                    <td><input type="text" class="editable-input edit-task" value="${item.task || ''}"></td>
-                    <td><select class="editable-select edit-subject">${subjectOptions}</select></td>
-                    <td><input type="text" class="editable-input edit-date" value="${item.date || ''}" placeholder="D/M/YYYY"></td>
-                    <td><select class="editable-select edit-status">${statusOptions}</select></td>
-                    <td class="td-actions"><button class="btn-delete" onclick="deleteRow(${item._originalIndex})">刪除</button></td>
+                    <td><input type="text" class="editable-input" value="${item.id || ''}" onchange="updateRowData(${realIndex}, 'id', this.value)"></td>
+                    <td><input type="text" class="editable-input" value="${item.task || ''}" onchange="updateRowData(${realIndex}, 'task', this.value)"></td>
+                    <td>
+                        <select class="editable-select" onchange="updateRowData(${realIndex}, 'subject', this.value)">
+                            <option value="">-- 請選擇 --</option>
+                            ${optionsSub}
+                        </select>
+                    </td>
+                    <td><input type="text" class="editable-input" value="${item.date || ''}" placeholder="D/M/YYYY" onchange="updateRowData(${realIndex}, 'date', this.value)"></td>
+                    <td>
+                        <select class="editable-select" onchange="updateRowData(${realIndex}, 'status', this.value)">
+                            <option value="">-- 請選擇 --</option>
+                            ${optionsStatus}
+                        </select>
+                    </td>
+                    <td class="td-actions">
+                        <button class="btn-delete" onclick="deleteRow(${realIndex})">刪除</button>
+                    </td>
                 `;
             } else {
                 tr.innerHTML = `
