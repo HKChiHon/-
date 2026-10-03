@@ -745,9 +745,10 @@
 </div>
 
 <script>
+    // System Password
     const EDIT_PASSWORD = "henry021412";
-    const API_BASE_URL = "/api";
 
+    // Master Subjects list
     const SUBJECT_LIST = [
         "全部", "中國語文", "English Language", "Mathematics", "Chemistry", 
         "Geography", "History", "中國歷史", "公民、經濟及社會", "倫理與宗教", 
@@ -758,6 +759,7 @@
     const STATUS_LIST = ["即將截止", "已截止", "待截止", "晚點", "待發放"];
     const DEFAULT_MARQUEE_TEXT = "📢 歡迎使用 3J 功課大屏！請準時交功課，勤奮學習！";
 
+    // State Variables
     let homeworkList = [];
     let marqueeText = DEFAULT_MARQUEE_TEXT;
     let lastUpdateTime = "";
@@ -766,20 +768,26 @@
     let currentSearchTerm = "";
     let isEditing = false;
 
+    // Initialization
     window.addEventListener("DOMContentLoaded", () => {
         checkDisclaimerConsent();
+        loadData();
         initSubjectFilterButtons();
         updateClock();
-        fetchServerData();
-        
         setInterval(() => {
             updateClock();
+            checkAndAutoUpdateStatuses();
+        }, 1000);
+
+        // Auto-refresh every 10 seconds for all users when not in edit mode
+        setInterval(() => {
             if (!isEditing) {
-                fetchServerData();
+                loadData();
             }
-        }, 3000);
+        }, 10000);
     });
 
+    // Terms of Use Modal Logic
     function checkDisclaimerConsent() {
         document.getElementById("termsModal").style.display = "flex";
         document.getElementById("agreeCheckbox").checked = false;
@@ -795,37 +803,39 @@
         document.getElementById("termsModal").style.display = "none";
     }
 
-    async function fetchServerData() {
+    // Database Sync Functions (REST API)
+    async function loadData() {
         try {
-            const res = await fetch(`${API_BASE_URL}/data`);
-            if (res.ok) {
-                const data = await res.json();
-                homeworkList = data.homeworkList || [];
+            const response = await fetch('/api/homework');
+            if (response.ok) {
+                const data = await response.json();
+                homeworkList = data.homework || [];
                 marqueeText = data.marqueeText || DEFAULT_MARQUEE_TEXT;
-                lastUpdateTime = data.lastUpdateTime || '';
+                lastUpdateTime = data.lastUpdateTime || "";
+                
                 initMarquee();
                 renderLastUpdateTime();
                 checkAndAutoUpdateStatuses();
                 render();
             }
-        } catch (err) {
-            console.error("Error fetching data from server:", err);
+        } catch (e) {
+            console.error("Failed to load data from server SQL database:", e);
         }
     }
 
-    async function saveServerData() {
+    async function saveData() {
         try {
-            await fetch(`${API_BASE_URL}/save`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
+            await fetch('/api/homework', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    homeworkList: homeworkList,
+                    homework: homeworkList,
                     marqueeText: marqueeText,
                     lastUpdateTime: lastUpdateTime
                 })
             });
-        } catch (err) {
-            console.error("Error saving data to server:", err);
+        } catch (e) {
+            console.error("Failed to save data to server SQL database:", e);
         }
     }
 
@@ -850,18 +860,19 @@
         }
     }
 
+    // Marquee
     function initMarquee() {
         document.getElementById("marqueeDisplay").textContent = marqueeText;
-        if (document.activeElement !== document.getElementById("marqueeInput")) {
-            document.getElementById("marqueeInput").value = marqueeText;
-        }
+        document.getElementById("marqueeInput").value = marqueeText;
     }
 
     function updateMarqueeText(val) {
         marqueeText = val || DEFAULT_MARQUEE_TEXT;
         document.getElementById("marqueeDisplay").textContent = marqueeText;
+        saveData();
     }
 
+    // Auto update logic based on dates
     function parseDueDate(dateStr) {
         if (!dateStr) return null;
         const parts = dateStr.split('/');
@@ -907,7 +918,8 @@
         }
 
         if (changed) {
-            saveServerData();
+            saveData();
+            render();
         }
     }
 
@@ -935,22 +947,20 @@
         });
     }
 
+    // Password Security Logic
     function handleEditClick() {
-        if (!isEditing) {
-            document.getElementById("pwdInput").value = "";
-            document.getElementById("modalError").style.display = "none";
-            document.getElementById("passwordModal").style.display = "flex";
-            document.getElementById("pwdInput").focus();
+        if (isEditing) {
+            toggleEditMode(false);
         } else {
-            isEditing = false;
-            updateLastEditTimestamp();
-            saveServerData();
-            document.getElementById("app").classList.remove("editing-mode");
-            const btn = document.getElementById("btnEditToggle");
-            btn.textContent = "✏ 編輯";
-            btn.classList.remove("editing");
-            render();
+            openPasswordModal();
         }
+    }
+
+    function openPasswordModal() {
+        document.getElementById("pwdInput").value = "";
+        document.getElementById("modalError").style.display = "none";
+        document.getElementById("passwordModal").style.display = "flex";
+        setTimeout(() => document.getElementById("pwdInput").focus(), 100);
     }
 
     function closePasswordModal() {
@@ -960,49 +970,53 @@
     function verifyPassword() {
         const pwd = document.getElementById("pwdInput").value;
         if (pwd === EDIT_PASSWORD) {
-            isEditing = true;
             closePasswordModal();
-            document.getElementById("app").classList.add("editing-mode");
-            const btn = document.getElementById("btnEditToggle");
-            btn.textContent = "💾 儲存並退出";
-            btn.classList.add("editing");
-            render();
+            toggleEditMode(true);
         } else {
             document.getElementById("modalError").style.display = "block";
         }
     }
 
+    function toggleEditMode(enable) {
+        isEditing = enable;
+        const app = document.getElementById("app");
+        const btn = document.getElementById("btnEditToggle");
+
+        if (isEditing) {
+            app.classList.add("editing-mode");
+            btn.classList.add("editing");
+            btn.innerHTML = "✔ 完成編輯";
+        } else {
+            app.classList.remove("editing-mode");
+            btn.classList.remove("editing");
+            btn.innerHTML = "✏ 編輯";
+            updateLastEditTimestamp();
+            saveData();
+        }
+        render();
+    }
+
+    // Data Filtering & Searching
     function setStatusFilter(status) {
         currentStatusFilter = status;
-        const buttons = document.querySelectorAll("#statusFilterGroup .filter-btn");
-        buttons.forEach(btn => {
-            if (btn.dataset.status === status) btn.classList.add("active");
-            else btn.classList.remove("active");
-        });
-        render();
-    }
-
-    function setSubjectFilter(subject) {
-        currentSubjectFilter = subject;
-        const buttons = document.querySelectorAll("#subjectFilterGroup .filter-btn");
-        buttons.forEach(btn => {
-            if (btn.dataset.subject === subject) btn.classList.add("active");
-            else btn.classList.remove("active");
-        });
-        render();
-    }
-
-    function resetAllFilters() {
-        currentStatusFilter = "ALL";
-        currentSubjectFilter = "ALL";
-        currentSearchTerm = "";
-        document.getElementById("searchInput").value = "";
-        
         document.querySelectorAll("#statusFilterGroup .filter-btn").forEach(btn => {
-            btn.classList.toggle("active", btn.dataset.status === "ALL");
+            if (btn.dataset.status === status) {
+                btn.classList.add("active");
+            } else {
+                btn.classList.remove("active");
+            }
         });
+        render();
+    }
+
+    function setSubjectFilter(sub) {
+        currentSubjectFilter = sub;
         document.querySelectorAll("#subjectFilterGroup .filter-btn").forEach(btn => {
-            btn.classList.toggle("active", btn.dataset.subject === "ALL");
+            if (btn.dataset.subject === sub) {
+                btn.classList.add("active");
+            } else {
+                btn.classList.remove("active");
+            }
         });
         render();
     }
@@ -1012,24 +1026,114 @@
         render();
     }
 
-    function updateRowData(index, field, value) {
+    function resetAllFilters() {
+        currentStatusFilter = "ALL";
+        currentSubjectFilter = "ALL";
+        currentSearchTerm = "";
+        document.getElementById("searchInput").value = "";
+
+        setStatusFilter("ALL");
+        setSubjectFilter("ALL");
+    }
+
+    // CRUD Editing functions
+    function updateRowItem(index, field, value) {
         homeworkList[index][field] = value;
+        saveData();
+        if (field === 'status' || field === 'date') {
+            updateStats();
+        }
+    }
+
+    function addNewRow() {
+        homeworkList.unshift({
+            id: `NEW${Math.floor(Math.random() * 1000)}`,
+            task: "新課業",
+            subject: "中國語文",
+            date: "1/10/2026",
+            status: "待截止"
+        });
+        saveData();
+        render();
     }
 
     function deleteRow(index) {
         homeworkList.splice(index, 1);
+        saveData();
         render();
     }
 
-    function addNewRow() {
-        homeworkList.unshift({ id: "", task: "", subject: "", date: "", status: "待截止" });
-        render();
+    // Rendering Table and UI
+    function render() {
+        const tbody = document.getElementById("homeworkTableBody");
+        tbody.innerHTML = "";
+
+        let filtered = homeworkList.filter(item => {
+            if (currentStatusFilter !== "ALL" && item.status !== currentStatusFilter) {
+                return false;
+            }
+            if (currentSubjectFilter !== "ALL" && item.subject !== currentSubjectFilter) {
+                return false;
+            }
+            if (currentSearchTerm !== "") {
+                const searchStr = `${item.id} ${item.task} ${item.subject}`.toLowerCase();
+                if (!searchStr.includes(currentSearchTerm)) {
+                    return false;
+                }
+            }
+            return true;
+        });
+
+        if (filtered.length === 0) {
+            document.getElementById("emptyMessage").style.display = "block";
+        } else {
+            document.getElementById("emptyMessage").style.display = "none";
+        }
+
+        filtered.forEach((item) => {
+            const realIndex = homeworkList.indexOf(item);
+            const tr = document.createElement("tr");
+
+            if (isEditing) {
+                tr.innerHTML = `
+                    <td><input type="text" class="editable-input" value="${item.id}" onchange="updateRowItem(${realIndex}, 'id', this.value)"></td>
+                    <td><input type="text" class="editable-input" value="${item.task}" onchange="updateRowItem(${realIndex}, 'task', this.value)"></td>
+                    <td>
+                        <select class="editable-select" onchange="updateRowItem(${realIndex}, 'subject', this.value)">
+                            ${SUBJECT_LIST.filter(s => s !== "全部").map(s => `<option value="${s}" ${s === item.subject ? 'selected' : ''}>${s}</option>`).join('')}
+                        </select>
+                    </td>
+                    <td><input type="text" class="editable-input" value="${item.date}" onchange="updateRowItem(${realIndex}, 'date', this.value)"></td>
+                    <td>
+                        <select class="editable-select" onchange="updateRowItem(${realIndex}, 'status', this.value)">
+                            ${STATUS_LIST.map(st => `<option value="${st}" ${st === item.status ? 'selected' : ''}>${st}</option>`).join('')}
+                        </select>
+                    </td>
+                    <td class="td-actions">
+                        <button class="btn-delete" onclick="deleteRow(${realIndex})">刪除</button>
+                    </td>
+                `;
+            } else {
+                tr.innerHTML = `
+                    <td>${item.id || '-'}</td>
+                    <td>${item.task || '-'}</td>
+                    <td>${item.subject || '-'}</td>
+                    <td>${item.date || '-'}</td>
+                    <td class="status-${item.status}">${item.status || '-'}</td>
+                    <td class="td-actions"></td>
+                `;
+            }
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById("recordCounter").textContent = `顯示 ${filtered.length} 項 / 共 ${homeworkList.length} 項`;
+        updateStats();
     }
 
     function updateStats() {
         const counts = { "即將截止": 0, "已截止": 0, "待截止": 0, "晚點": 0, "待發放": 0 };
         homeworkList.forEach(item => {
-            if (counts.hasOwnProperty(item.status)) {
+            if (counts[item.status] !== undefined) {
                 counts[item.status]++;
             }
         });
@@ -1039,72 +1143,6 @@
         document.getElementById("countPending").textContent = counts["待截止"];
         document.getElementById("countLate").textContent = counts["晚點"];
         document.getElementById("countUnissued").textContent = counts["待發放"];
-    }
-
-    function render() {
-        updateStats();
-
-        const tbody = document.getElementById("homeworkTableBody");
-        tbody.innerHTML = "";
-
-        const filtered = homeworkList.filter((item) => {
-            if (currentStatusFilter !== "ALL" && item.status !== currentStatusFilter) return false;
-            if (currentSubjectFilter !== "ALL" && item.subject !== currentSubjectFilter) return false;
-            if (currentSearchTerm) {
-                const matchId = (item.id || "").toLowerCase().includes(currentSearchTerm);
-                const matchTask = (item.task || "").toLowerCase().includes(currentSearchTerm);
-                const matchSub = (item.subject || "").toLowerCase().includes(currentSearchTerm);
-                if (!matchId && !matchTask && !matchSub) return false;
-            }
-            return true;
-        });
-
-        document.getElementById("recordCounter").textContent = `顯示 ${filtered.length} 項 / 共 ${homeworkList.length} 項`;
-        document.getElementById("emptyMessage").style.display = filtered.length === 0 ? "block" : "none";
-
-        filtered.forEach((item) => {
-            const realIndex = homeworkList.indexOf(item);
-            const tr = document.createElement("tr");
-
-            if (isEditing) {
-                const optionsSub = SUBJECT_LIST.filter(s => s !== "全部")
-                    .map(s => `<option value="${s}" ${s === item.subject ? 'selected' : ''}>${s}</option>`).join('');
-                
-                const optionsStatus = STATUS_LIST
-                    .map(st => `<option value="${st}" ${st === item.status ? 'selected' : ''}>${st}</option>`).join('');
-
-                tr.innerHTML = `
-                    <td><input type="text" class="editable-input" value="${item.id || ''}" onchange="updateRowData(${realIndex}, 'id', this.value)"></td>
-                    <td><input type="text" class="editable-input" value="${item.task || ''}" onchange="updateRowData(${realIndex}, 'task', this.value)"></td>
-                    <td>
-                        <select class="editable-select" onchange="updateRowData(${realIndex}, 'subject', this.value)">
-                            <option value="">-- 請選擇 --</option>
-                            ${optionsSub}
-                        </select>
-                    </td>
-                    <td><input type="text" class="editable-input" value="${item.date || ''}" placeholder="D/M/YYYY" onchange="updateRowData(${realIndex}, 'date', this.value)"></td>
-                    <td>
-                        <select class="editable-select" onchange="updateRowData(${realIndex}, 'status', this.value)">
-                            <option value="">-- 請選擇 --</option>
-                            ${optionsStatus}
-                        </select>
-                    </td>
-                    <td class="td-actions">
-                        <button class="btn-delete" onclick="deleteRow(${realIndex})">刪除</button>
-                    </td>
-                `;
-            } else {
-                tr.innerHTML = `
-                    <td>${item.id || ''}</td>
-                    <td>${item.task || ''}</td>
-                    <td>${item.subject || ''}</td>
-                    <td>${item.date || ''}</td>
-                    <td class="status-${item.status}">${item.status || ''}</td>
-                    <td class="td-actions"></td>
-                `;
-            }
-            tbody.appendChild(tr);
-        });
     }
 </script>
 </body>
