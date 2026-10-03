@@ -629,64 +629,6 @@
             font-size: 15px;
         }
     </style>
-
-    <!-- Firebase SDK Modular Scripts -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-        import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
-
-        // Firebase Configuration - REPLACE WITH YOUR PROJECT KEYS FROM FIREBASE CONSOLE
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const dataRef = ref(db, '3j_homework_app');
-
-        // Expose Firebase functions globally to work with UI handlers
-        window.saveDataToCloud = function(homeworkList, marqueeText, lastUpdateTime) {
-            set(dataRef, {
-                homeworkList: homeworkList,
-                marqueeText: marqueeText,
-                lastUpdateTime: lastUpdateTime
-            }).catch(error => {
-                console.error("Firebase sync error: ", error);
-            });
-        };
-
-        // Realtime Listener across all connected devices
-        onValue(dataRef, (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                if (data.homeworkList !== undefined) window.homeworkList = data.homeworkList || [];
-                if (data.marqueeText !== undefined) {
-                    window.marqueeText = data.marqueeText;
-                    document.getElementById("marqueeDisplay").textContent = window.marqueeText;
-                    
-                    // Don't overwrite input if user is actively typing in marquee input box
-                    if (document.activeElement !== document.getElementById("marqueeInput")) {
-                        document.getElementById("marqueeInput").value = window.marqueeText;
-                    }
-                }
-                if (data.lastUpdateTime !== undefined) {
-                    window.lastUpdateTime = data.lastUpdateTime;
-                    window.renderLastUpdateTime();
-                }
-                window.render();
-            } else {
-                // Seed initial dataset if database is empty
-                window.saveDataToCloud(window.DEFAULT_DATA, window.DEFAULT_MARQUEE_TEXT, "");
-            }
-        });
-    </script>
 </head>
 <body>
 
@@ -700,10 +642,10 @@
             此表只供參考，功課的繳交時間以科任老師的宣佈為準則！
         </div>
         <label class="terms-checkbox-label">
-            <input type="checkbox" id="agreeCheckbox" onchange="toggleAgreeButton()">
+            <input type="checkbox" id="agreeCheckbox">
             <span>本人已閱讀並同意以上條款及細則</span>
         </label>
-        <button class="terms-btn-enter" id="btnEnterApp" disabled onclick="acceptTermsAndEnter()">進入網站</button>
+        <button class="terms-btn-enter" id="btnEnterApp" disabled>進入網站</button>
     </div>
 </div>
 
@@ -717,9 +659,7 @@
 
         <div class="header-action-group">
             <div class="last-update-display" id="lastUpdateDisplay">最後更新：未有紀錄</div>
-            <button class="btn-edit-toggle" id="btnEditToggle" onclick="handleEditClick()">
-                ✏ 編輯
-            </button>
+            <button class="btn-edit-toggle" id="btnEditToggle">✏ 編輯</button>
         </div>
     </header>
 
@@ -728,14 +668,14 @@
         <div class="filter-row">
             <span class="filter-label">狀態篩選：</span>
             <div class="btn-group" id="statusFilterGroup">
-                <button class="filter-btn active" data-status="ALL" onclick="setStatusFilter('ALL')">全部</button>
-                <button class="filter-btn" data-status="即將截止" onclick="setStatusFilter('即將截止')">即將截止</button>
-                <button class="filter-btn" data-status="已截止" onclick="setStatusFilter('已截止')">已截止</button>
-                <button class="filter-btn" data-status="待截止" onclick="setStatusFilter('待截止')">待截止</button>
-                <button class="filter-btn" data-status="晚點" onclick="setStatusFilter('晚點')">晚點</button>
-                <button class="filter-btn" data-status="待發放" onclick="setStatusFilter('待發放')">待發放</button>
+                <button class="filter-btn active" data-status="ALL">全部</button>
+                <button class="filter-btn" data-status="即將截止">即將截止</button>
+                <button class="filter-btn" data-status="已截止">已截止</button>
+                <button class="filter-btn" data-status="待截止">待截止</button>
+                <button class="filter-btn" data-status="晚點">晚點</button>
+                <button class="filter-btn" data-status="待發放">待發放</button>
             </div>
-            <button class="filter-btn btn-reset" onclick="resetAllFilters()">重置篩選</button>
+            <button class="filter-btn btn-reset" id="btnResetFilters">重置篩選</button>
         </div>
 
         <div class="filter-row">
@@ -744,14 +684,14 @@
         </div>
 
         <div class="search-container">
-            <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜尋編號、課業名稱或科目..." oninput="onSearchInput(this.value)">
+            <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜尋編號、課業名稱或科目...">
         </div>
 
         <div class="marquee-container">
             <div class="marquee-content" id="marqueeDisplay">📢 歡迎使用 3J 功課大屏！請準時交功課，勤奮學習！</div>
         </div>
         <div class="marquee-edit-box">
-            <input type="text" id="marqueeInput" class="marquee-edit-input" placeholder="✏️ 編輯跑馬燈滾動文字..." oninput="updateMarqueeText(this.value)">
+            <input type="text" id="marqueeInput" class="marquee-edit-input" placeholder="✏️ 編輯跑馬燈滾動文字...">
         </div>
     </section>
 
@@ -766,7 +706,7 @@
 
     <!-- Table Container -->
     <main class="table-area" id="tableArea">
-        <button class="btn-add-row" onclick="addNewRow()">＋ 新增功課</button>
+        <button class="btn-add-row" id="btnAddRow">＋ 新增功課</button>
         <table>
             <thead>
                 <tr>
@@ -793,16 +733,35 @@
 <div class="modal-overlay" id="passwordModal">
     <div class="modal-card">
         <div class="modal-title">🔒 請輸入編輯密碼</div>
-        <input type="password" id="pwdInput" class="modal-input" placeholder="密碼" onkeydown="if(event.key==='Enter') verifyPassword()">
+        <input type="password" id="pwdInput" class="modal-input" placeholder="密碼">
         <div class="modal-error" id="modalError">密碼錯誤，請重新輸入！</div>
         <div class="modal-buttons">
-            <button class="modal-btn modal-btn-cancel" onclick="closePasswordModal()">取消</button>
-            <button class="modal-btn modal-btn-confirm" onclick="verifyPassword()">確認</button>
+            <button class="modal-btn modal-btn-cancel" id="btnCancelPassword">取消</button>
+            <button class="modal-btn modal-btn-confirm" id="btnConfirmPassword">確認</button>
         </div>
     </div>
 </div>
 
-<script>
+<!-- Firebase SDK Realtime Sync Integration -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+    import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+    // Firebase Config
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+        databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_PROJECT_ID.appspot.com",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const dbRef = ref(db, '3j_homework_app');
+
     // System Password
     const EDIT_PASSWORD = "henry021412";
 
@@ -817,7 +776,7 @@
     const STATUS_LIST = ["即將截止", "已截止", "待截止", "晚點", "待發放"];
 
     // Default Initial Dataset
-    window.DEFAULT_DATA = [
+    const DEFAULT_DATA = [
         { id: "PTH001", task: "普通話習作預備稿", subject: "普通話", date: "5/10/2026", status: "待截止" },
         { id: "CHIN007", task: "作文改正", subject: "中國語文", date: "30/9/2026", status: "已截止" },
         { id: "CHIN009", task: "課後延伸", subject: "中國語文", date: "5/10/2026", status: "待截止" },
@@ -836,34 +795,80 @@
         { id: "CHIN004", task: "隨筆 2", subject: "中國語文", date: "7/10/2026", status: "待截止" }
     ];
 
-    window.DEFAULT_MARQUEE_TEXT = "📢 歡迎使用 3J 功課大屏！請準時交功課，勤奮學習！";
+    const DEFAULT_MARQUEE_TEXT = "📢 歡迎使用 3J 功課大屏！請準時交功課，勤奮學習！";
 
     // State Variables
-    window.homeworkList = [...window.DEFAULT_DATA];
-    window.marqueeText = window.DEFAULT_MARQUEE_TEXT;
-    window.lastUpdateTime = "";
-    
+    let homeworkList = [];
+    let marqueeText = DEFAULT_MARQUEE_TEXT;
+    let lastUpdateTime = "";
     let currentStatusFilter = "ALL";
     let currentSubjectFilter = "ALL";
     let currentSearchTerm = "";
     let isEditing = false;
 
-    // Initialization
+    // Listen to Firebase Realtime updates (Syncs automatically across devices)
+    onValue(dbRef, (snapshot) => {
+        const val = snapshot.val();
+        if (val) {
+            homeworkList = val.homeworkList || [];
+            marqueeText = val.marqueeText || DEFAULT_MARQUEE_TEXT;
+            lastUpdateTime = val.lastUpdateTime || "";
+        } else {
+            // First time initialization if cloud database is empty
+            homeworkList = [...DEFAULT_DATA];
+            marqueeText = DEFAULT_MARQUEE_TEXT;
+            syncToCloud();
+        }
+
+        if (!isEditing) {
+            render();
+            initMarquee();
+            renderLastUpdateTime();
+        }
+    });
+
+    // Function to publish updates live to all devices
+    function syncToCloud() {
+        set(dbRef, {
+            homeworkList: homeworkList,
+            marqueeText: marqueeText,
+            lastUpdateTime: lastUpdateTime
+        }).catch(err => console.error("Firebase sync error:", err));
+    }
+
+    // Dom Load Initialization
     window.addEventListener("DOMContentLoaded", () => {
         checkDisclaimerConsent();
-        initMarquee();
         initSubjectFilterButtons();
         updateClock();
-        renderLastUpdateTime();
         setInterval(() => {
             updateClock();
             checkAndAutoUpdateStatuses();
         }, 1000);
-        checkAndAutoUpdateStatuses();
-        render();
+        
+        setupEventListeners();
     });
 
-    // Terms of Use Modal Logic
+    function setupEventListeners() {
+        document.getElementById("agreeCheckbox").addEventListener("change", toggleAgreeButton);
+        document.getElementById("btnEnterApp").addEventListener("click", acceptTermsAndEnter);
+        document.getElementById("btnEditToggle").addEventListener("click", handleEditClick);
+        document.getElementById("btnResetFilters").addEventListener("click", resetAllFilters);
+        document.getElementById("searchInput").addEventListener("input", (e) => onSearchInput(e.target.value));
+        document.getElementById("marqueeInput").addEventListener("input", (e) => updateMarqueeText(e.target.value));
+        document.getElementById("btnAddRow").addEventListener("click", addNewRow);
+        document.getElementById("btnCancelPassword").addEventListener("click", closePasswordModal);
+        document.getElementById("btnConfirmPassword").addEventListener("click", verifyPassword);
+        document.getElementById("pwdInput").addEventListener("keydown", (e) => {
+            if (e.key === 'Enter') verifyPassword();
+        });
+
+        const statusBtns = document.querySelectorAll("#statusFilterGroup .filter-btn");
+        statusBtns.forEach(btn => {
+            btn.addEventListener("click", () => setStatusFilter(btn.dataset.status));
+        });
+    }
+
     function checkDisclaimerConsent() {
         document.getElementById("termsModal").style.display = "flex";
         document.getElementById("agreeCheckbox").checked = false;
@@ -879,13 +884,6 @@
         document.getElementById("termsModal").style.display = "none";
     }
 
-    // Cloud Data Sync Wrapper
-    function syncCloudData() {
-        if (typeof window.saveDataToCloud === "function") {
-            window.saveDataToCloud(window.homeworkList, window.marqueeText, window.lastUpdateTime);
-        }
-    }
-
     function updateLastEditTimestamp() {
         const now = new Date();
         const dd = String(now.getDate()).padStart(2, '0');
@@ -894,35 +892,29 @@
         const hh = String(now.getHours()).padStart(2, '0');
         const min = String(now.getMinutes()).padStart(2, '0');
         
-        window.lastUpdateTime = `${dd}/${mm}/${yyyy} ${hh}:${min}`;
+        lastUpdateTime = `${dd}/${mm}/${yyyy} ${hh}:${min}`;
         renderLastUpdateTime();
     }
 
-    window.renderLastUpdateTime = function() {
+    function renderLastUpdateTime() {
         const display = document.getElementById("lastUpdateDisplay");
-        if (window.lastUpdateTime) {
-            display.textContent = `最後更新：${window.lastUpdateTime}`;
+        if (lastUpdateTime) {
+            display.textContent = `最後更新：${lastUpdateTime}`;
         } else {
             display.textContent = `最後更新：未有紀錄`;
         }
-    };
+    }
 
-    // Marquee
     function initMarquee() {
-        document.getElementById("marqueeDisplay").textContent = window.marqueeText;
-        document.getElementById("marqueeInput").value = window.marqueeText;
+        document.getElementById("marqueeDisplay").textContent = marqueeText;
+        document.getElementById("marqueeInput").value = marqueeText;
     }
 
     function updateMarqueeText(val) {
-        window.marqueeText = val || window.DEFAULT_MARQUEE_TEXT;
-        document.getElementById("marqueeDisplay").textContent = window.marqueeText;
-        
-        // Instant sync whenever marquee text changes
-        updateLastEditTimestamp();
-        syncCloudData();
+        marqueeText = val || DEFAULT_MARQUEE_TEXT;
+        document.getElementById("marqueeDisplay").textContent = marqueeText;
     }
 
-    // Auto update logic based on dates
     function parseDueDate(dateStr) {
         if (!dateStr) return null;
         const parts = dateStr.split('/');
@@ -938,8 +930,8 @@
         const now = new Date();
         let changed = false;
 
-        for (let i = window.homeworkList.length - 1; i >= 0; i--) {
-            const item = window.homeworkList[i];
+        for (let i = homeworkList.length - 1; i >= 0; i--) {
+            const item = homeworkList[i];
             if (!item.date || !item.status) continue;
 
             const dueDate = parseDueDate(item.date);
@@ -962,13 +954,14 @@
             }
 
             if (item.status === "已截止" && now >= threeDaysAfterDueDate) {
-                window.homeworkList.splice(i, 1);
+                homeworkList.splice(i, 1);
                 changed = true;
             }
         }
 
         if (changed) {
-            syncCloudData();
+            updateLastEditTimestamp();
+            syncToCloud();
             render();
         }
     }
@@ -997,7 +990,6 @@
         });
     }
 
-    // Password Security Logic
     function handleEditClick() {
         if (isEditing) {
             toggleEditMode();
@@ -1010,7 +1002,7 @@
         document.getElementById("pwdInput").value = "";
         document.getElementById("modalError").style.display = "none";
         document.getElementById("passwordModal").style.display = "flex";
-        setTimeout(() => document.getElementById("pwdInput").focus(), 100);
+        document.getElementById("pwdInput").focus();
     }
 
     function closePasswordModal() {
@@ -1018,40 +1010,73 @@
     }
 
     function verifyPassword() {
-        const enteredPwd = document.getElementById("pwdInput").value;
-        if (enteredPwd === EDIT_PASSWORD) {
+        const val = document.getElementById("pwdInput").value;
+        if (val === EDIT_PASSWORD) {
             closePasswordModal();
             toggleEditMode();
         } else {
             document.getElementById("modalError").style.display = "block";
-            document.getElementById("pwdInput").value = "";
-            document.getElementById("pwdInput").focus();
         }
     }
 
     function toggleEditMode() {
         isEditing = !isEditing;
         const btn = document.getElementById("btnEditToggle");
-        const app = document.getElementById("app");
+        const appContainer = document.getElementById("app");
 
         if (isEditing) {
-            btn.textContent = "✔ 完成";
             btn.classList.add("editing");
-            app.classList.add("editing-mode");
+            btn.innerHTML = "💾 完成編輯";
+            appContainer.classList.add("editing-mode");
         } else {
-            btn.textContent = "✏ 編輯";
             btn.classList.remove("editing");
-            app.classList.remove("editing-mode");
+            btn.innerHTML = "✏ 編輯";
+            appContainer.classList.remove("editing-mode");
             
-            // Sync current state on exit
+            // Save edits & sync live across devices
+            saveCurrentInputsFromDOM();
             updateLastEditTimestamp();
-            checkAndAutoUpdateStatuses();
-            syncCloudData();
+            syncToCloud();
         }
         render();
     }
 
-    // Filter Logic
+    function saveCurrentInputsFromDOM() {
+        if (!isEditing) return;
+        const rows = document.querySelectorAll("#homeworkTableBody tr");
+        const newList = [];
+        
+        rows.forEach(row => {
+            const idInput = row.querySelector(".input-id");
+            if (idInput) {
+                const id = idInput.value.trim();
+                const task = row.querySelector(".input-task").value.trim();
+                const subject = row.querySelector(".select-subject").value;
+                const date = row.querySelector(".input-date").value.trim();
+                const status = row.querySelector(".select-status").value;
+                
+                newList.push({ id, task, subject, date, status });
+            }
+        });
+        homeworkList = newList;
+    }
+
+    function addNewRow() {
+        homeworkList.unshift({
+            id: "NEW" + Math.floor(100 + Math.random() * 900),
+            task: "",
+            subject: SUBJECT_LIST[1] || "中國語文",
+            date: "",
+            status: "待截止"
+        });
+        render();
+    }
+
+    function deleteRow(index) {
+        homeworkList.splice(index, 1);
+        render();
+    }
+
     function setStatusFilter(status) {
         currentStatusFilter = status;
         document.querySelectorAll("#statusFilterGroup .filter-btn").forEach(btn => {
@@ -1068,11 +1093,6 @@
         render();
     }
 
-    function onSearchInput(val) {
-        currentSearchTerm = val.trim().toLowerCase();
-        render();
-    }
-
     function resetAllFilters() {
         currentStatusFilter = "ALL";
         currentSubjectFilter = "ALL";
@@ -1085,50 +1105,24 @@
         document.querySelectorAll("#subjectFilterGroup .filter-btn").forEach(btn => {
             btn.classList.toggle("active", btn.dataset.subject === "ALL");
         });
-
         render();
     }
 
-    // CRUD Operations - Real-time cloud sync triggers
-    function updateField(index, field, value) {
-        window.homeworkList[index][field] = value;
-        
-        // Instantly push change to Firebase and update timestamp
-        updateLastEditTimestamp();
-        syncCloudData();
-    }
-
-    function addNewRow() {
-        window.homeworkList.unshift({
-            id: "NEW" + String(Math.floor(Math.random() * 900) + 100),
-            task: "新功課",
-            subject: SUBJECT_LIST[1] || "中國語文",
-            date: "1/10/2026",
-            status: "待截止"
-        });
-        
-        updateLastEditTimestamp();
-        syncCloudData();
+    function onSearchInput(val) {
+        currentSearchTerm = val.trim().toLowerCase();
         render();
     }
 
-    function deleteRow(index) {
-        window.homeworkList.splice(index, 1);
-        
-        updateLastEditTimestamp();
-        syncCloudData();
-        render();
-    }
+    function render() {
+        updateStatisticsPills();
+        const tbody = document.getElementById("homeworkTableBody");
+        tbody.innerHTML = "";
 
-    // Rendering Engine
-    window.render = function() {
-        updateStats();
-
-        const filtered = window.homeworkList.filter(item => {
+        let filtered = homeworkList.filter(item => {
             if (currentStatusFilter !== "ALL" && item.status !== currentStatusFilter) return false;
             if (currentSubjectFilter !== "ALL" && item.subject !== currentSubjectFilter) return false;
             
-            if (currentSearchTerm !== "") {
+            if (currentSearchTerm) {
                 const idMatch = (item.id || "").toLowerCase().includes(currentSearchTerm);
                 const taskMatch = (item.task || "").toLowerCase().includes(currentSearchTerm);
                 const subMatch = (item.subject || "").toLowerCase().includes(currentSearchTerm);
@@ -1137,70 +1131,59 @@
             return true;
         });
 
-        const tbody = document.getElementById("homeworkTableBody");
-        tbody.innerHTML = "";
+        document.getElementById("recordCounter").textContent = `顯示 ${filtered.length} 項 / 共 ${homeworkList.length} 項`;
+        document.getElementById("emptyMessage").style.display = filtered.length === 0 ? "block" : "none";
 
-        if (filtered.length === 0) {
-            document.getElementById("emptyMessage").style.display = "block";
-        } else {
-            document.getElementById("emptyMessage").style.display = "none";
-        }
-
-        filtered.forEach((item) => {
-            const originalIndex = window.homeworkList.indexOf(item);
+        filtered.forEach((item, idx) => {
             const tr = document.createElement("tr");
 
             if (isEditing) {
-                // Editable Rows - input triggers instant cloud synchronization
                 tr.innerHTML = `
-                    <td><input type="text" class="editable-input" value="${item.id || ''}" oninput="updateField(${originalIndex}, 'id', this.value)"></td>
-                    <td><input type="text" class="editable-input" value="${item.task || ''}" oninput="updateField(${originalIndex}, 'task', this.value)"></td>
+                    <td><input type="text" class="editable-input input-id" value="${item.id || ''}"></td>
+                    <td><input type="text" class="editable-input input-task" value="${item.task || ''}"></td>
                     <td>
-                        <select class="editable-select" onchange="updateField(${originalIndex}, 'subject', this.value)">
+                        <select class="editable-select select-subject">
                             ${SUBJECT_LIST.filter(s => s !== "全部").map(s => `<option value="${s}" ${s === item.subject ? 'selected' : ''}>${s}</option>`).join('')}
                         </select>
                     </td>
-                    <td><input type="text" class="editable-input" value="${item.date || ''}" placeholder="D/M/YYYY" oninput="updateField(${originalIndex}, 'date', this.value)"></td>
+                    <td><input type="text" class="editable-input input-date" value="${item.date || ''}" placeholder="DD/MM/YYYY"></td>
                     <td>
-                        <select class="editable-select" onchange="updateField(${originalIndex}, 'status', this.value)">
+                        <select class="editable-select select-status">
                             ${STATUS_LIST.map(st => `<option value="${st}" ${st === item.status ? 'selected' : ''}>${st}</option>`).join('')}
                         </select>
                     </td>
                     <td class="td-actions">
-                        <button class="btn-delete" onclick="deleteRow(${originalIndex})">刪除</button>
+                        <button class="btn-delete" data-idx="${homeworkList.indexOf(item)}">刪除</button>
                     </td>
                 `;
             } else {
-                // Read-only Display Rows
                 tr.innerHTML = `
                     <td>${item.id || '-'}</td>
                     <td>${item.task || '-'}</td>
                     <td>${item.subject || '-'}</td>
                     <td>${item.date || '-'}</td>
-                    <td class="status-${item.status || ''}">${item.status || '-'}</td>
+                    <td class="status-${item.status}">${item.status || '-'}</td>
                     <td class="td-actions"></td>
                 `;
             }
-
             tbody.appendChild(tr);
         });
 
-        document.getElementById("recordCounter").textContent = `顯示 ${filtered.length} 項 / 共 ${window.homeworkList.length} 項`;
-    };
+        // Delete Row Button Action Handler
+        if (isEditing) {
+            document.querySelectorAll(".btn-delete").forEach(btn => {
+                btn.onclick = (e) => {
+                    const originalIdx = parseInt(e.target.dataset.idx, 10);
+                    deleteRow(originalIdx);
+                };
+            });
+        }
+    }
 
-    function updateStats() {
-        const counts = {
-            "即將截止": 0,
-            "已截止": 0,
-            "待截止": 0,
-            "晚點": 0,
-            "待發放": 0
-        };
-
-        window.homeworkList.forEach(item => {
-            if (counts[item.status] !== undefined) {
-                counts[item.status]++;
-            }
+    function updateStatisticsPills() {
+        const counts = { "即將截止": 0, "已截止": 0, "待截止": 0, "晚點": 0, "待發放": 0 };
+        homeworkList.forEach(item => {
+            if (counts[item.status] !== undefined) counts[item.status]++;
         });
 
         document.getElementById("countUpcoming").textContent = counts["即將截止"];
@@ -1210,5 +1193,6 @@
         document.getElementById("countUnissued").textContent = counts["待發放"];
     }
 </script>
+
 </body>
 </html>
