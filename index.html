@@ -2,250 +2,155 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Real-Time Synchronized List</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Real-Time Synchronized Editor</title>
   <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      max-width: 600px;
+    .editor-container {
+      font-family: Arial, sans-serif;
+      max-width: 500px;
       margin: 40px auto;
-      padding: 0 20px;
-      background-color: #f7f9fb;
-      color: #333;
     }
-
-    h1 {
-      text-align: center;
-      color: #1a202c;
-    }
-
-    .subtitle {
-      text-align: center;
-      font-size: 0.9rem;
-      color: #718096;
-      margin-bottom: 24px;
-    }
-
-    .input-group {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    input[type="text"] {
-      flex: 1;
-      padding: 10px 14px;
-      border: 1px solid #cbd5e0;
-      border-radius: 6px;
-      font-size: 1rem;
+    .editor-box {
+      border: 1px solid #ccc;
+      padding: 10px;
+      min-height: 80px;
+      margin-bottom: 10px;
+      border-radius: 4px;
       outline: none;
     }
-
-    input[type="text"]:focus {
-      border-color: #3182ce;
-      box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+    .editor-box[contenteditable="true"] {
+      border-color: #007bff;
+      box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
     }
-
-    button {
-      padding: 10px 18px;
-      background-color: #3182ce;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-
-    button:hover {
-      background-color: #2b6cb0;
-    }
-
-    ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    li {
+    .control-bar {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      background: white;
-      padding: 12px 16px;
-      border-radius: 6px;
-      margin-bottom: 10px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      gap: 12px;
     }
-
-    .item-text {
-      flex: 1;
-      margin-right: 12px;
-      padding: 6px;
-      border: 1px solid transparent;
+    .last-updated {
+      font-size: 14px;
+      color: #555;
+    }
+    button {
+      padding: 6px 14px;
+      cursor: pointer;
       border-radius: 4px;
+      border: 1px solid #ccc;
+      background-color: #f8f9fa;
     }
-
-    .item-text[contenteditable="true"] {
-      border-color: #e2e8f0;
-      background-color: #f8fafc;
-      outline: none;
-    }
-
-    .item-text[contenteditable="true"]:focus {
-      border-color: #3182ce;
-      background-color: #fff;
-    }
-
-    .actions {
-      display: flex;
-      gap: 8px;
-    }
-
-    .btn-edit {
-      background-color: #edf2f7;
-      color: #2d3748;
-    }
-
-    .btn-edit:hover {
-      background-color: #e2e8f0;
-    }
-
-    .btn-delete {
-      background-color: #e53e3e;
-      color: white;
-    }
-
-    .btn-delete:hover {
-      background-color: #c53030;
+    button:hover {
+      background-color: #e2e6ea;
     }
   </style>
 </head>
 <body>
 
-  <h1>Synced Item List</h1>
-  <p class="subtitle">Edits synced in real-time across all connected devices</p>
-
-  <div class="input-group">
-    <input type="text" id="newItemInput" placeholder="Enter a new item..." />
-    <button id="addBtn">Add Item</button>
+<div class="editor-container">
+  <!-- Editor Field -->
+  <div id="editor" contenteditable="true" class="editor-box">
+    Click here to edit content...
   </div>
 
-  <ul id="itemList"></ul>
+  <!-- Controls & Timestamp -->
+  <div class="control-bar">
+    <button id="editBtn">Finish Editing</button>
+    <span class="last-updated">
+      Last updated: <span id="timestamp">--/--/---- --:--</span>
+    </span>
+  </div>
+</div>
 
-  <!-- Firebase Modular SDK via CDN -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+<!-- Firebase Modular SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+  import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
 
-    // 1. Replace with your actual Firebase project configuration:
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
+  // 1. Replace with your actual Firebase Project Configuration:
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
 
-    // 2. Initialize Firebase & Database Reference
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const itemsRef = ref(db, 'items');
+  // 2. Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const editorRef = ref(db, 'shared_editor');
 
-    const newItemInput = document.getElementById('newItemInput');
-    const addBtn = document.getElementById('addBtn');
-    const itemList = document.getElementById('itemList');
+  let isEditing = true;
 
-    // 3. Add Item
-    function addItem() {
-      const text = newItemInput.value.trim();
-      if (text !== "") {
-        push(itemsRef, { text: text });
-        newItemInput.value = "";
+  const editor = document.getElementById('editor');
+  const btn = document.getElementById('editBtn');
+  const timestampSpan = document.getElementById('timestamp');
+
+  // Helper function to format timestamp
+  function formatDateTime(date) {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+  }
+
+  // Save changes instantly to Firebase Cloud
+  function saveToCloud() {
+    const content = editor.innerText;
+    const now = formatDateTime(new Date());
+
+    set(editorRef, {
+      content: content,
+      timestamp: now
+    }).catch(error => {
+      console.error("Sync error:", error);
+    });
+  }
+
+  // Toggle Edit/Finish Editing state
+  function toggleEdit() {
+    if (isEditing) {
+      // Finish Editing action
+      editor.contentEditable = "false";
+      btn.innerText = "Edit";
+      isEditing = false;
+    } else {
+      // Start Editing action
+      editor.contentEditable = "true";
+      editor.focus();
+      btn.innerText = "Finish Editing";
+      isEditing = true;
+    }
+  }
+
+  btn.addEventListener('click', toggleEdit);
+
+  // Trigger instant save & sync whenever any text changes inside the editor
+  editor.addEventListener('input', () => {
+    if (isEditing) {
+      saveToCloud();
+    }
+  });
+
+  // Real-time synchronization listener across all connected devices
+  onValue(editorRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      // Avoid overwriting local cursor position if the user is currently typing in this browser tab
+      if (document.activeElement !== editor) {
+        editor.innerText = data.content || "";
+      }
+      if (data.timestamp) {
+        timestampSpan.innerText = data.timestamp;
       }
     }
+  });
+</script>
 
-    addBtn.addEventListener('click', addItem);
-    newItemInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') addItem();
-    });
-
-    // 4. Real-Time Synchronization Listener
-    onValue(itemsRef, (snapshot) => {
-      itemList.innerHTML = '';
-      const data = snapshot.val();
-
-      if (data) {
-        Object.keys(data).forEach((id) => {
-          const item = data[id];
-          renderItem(id, item.text);
-        });
-      }
-    });
-
-    // 5. Render List Items with Inline Edit functionality
-    function renderItem(id, text) {
-      const li = document.createElement('li');
-
-      const textSpan = document.createElement('span');
-      textSpan.className = 'item-text';
-      textSpan.textContent = text;
-      textSpan.contentEditable = "false";
-
-      const actionsDiv = document.createElement('div');
-      actionsDiv.className = 'actions';
-
-      const editBtn = document.createElement('button');
-      editBtn.className = 'btn-edit';
-      editBtn.textContent = 'Edit';
-
-      const deleteBtn = document.createElement('button');
-      deleteBtn.className = 'btn-delete';
-      deleteBtn.textContent = 'Delete';
-
-      // Toggle edit mode / Save changes
-      editBtn.addEventListener('click', () => {
-        const isEditing = textSpan.contentEditable === "true";
-        
-        if (isEditing) {
-          // Save updated text to Firebase
-          const updatedText = textSpan.textContent.trim();
-          if (updatedText !== "") {
-            update(ref(db, `items/${id}`), { text: updatedText });
-          }
-          textSpan.contentEditable = "false";
-          editBtn.textContent = 'Edit';
-        } else {
-          // Enable inline editing
-          textSpan.contentEditable = "true";
-          textSpan.focus();
-          editBtn.textContent = 'Save';
-        }
-      });
-
-      // Save on Enter key press while editing
-      textSpan.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          editBtn.click();
-        }
-      });
-
-      // Delete item from Firebase
-      deleteBtn.addEventListener('click', () => {
-        remove(ref(db, `items/${id}`));
-      });
-
-      actionsDiv.appendChild(editBtn);
-      actionsDiv.appendChild(deleteBtn);
-
-      li.appendChild(textSpan);
-      li.appendChild(actionsDiv);
-
-      itemList.appendChild(li);
-    }
-  </script>
 </body>
 </html>
