@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3J功課大屏</title>
+    <title>3J功課大屏 (Neon Connected)</title>
     <style>
         /* MTR Font Stack & Styling */
         @font-family {
@@ -22,11 +22,11 @@
             --text-main: #ffffff;
             
             /* Status Colors */
-            --status-upcoming: #ffff00; /* 即將截止 (Yellow) */
-            --status-expired: #ff4d4d;  /* 已截止 (Red) */
-            --status-pending: #00ff66;  /* 待截止 (Green) */
-            --status-late: #c05cff;     /* 晚點 (Purple) */
-            --status-unissued: #00e5ff; /* 待發放 (Cyan) */
+            --status-upcoming: #ffff00;
+            --status-expired: #ff4d4d;
+            --status-pending: #00ff66;
+            --status-late: #c05cff;
+            --status-unissued: #00e5ff;
         }
 
         * {
@@ -46,7 +46,6 @@
             overflow-x: hidden;
         }
 
-        /* Responsive Main Container */
         .app-container {
             display: flex;
             flex-direction: column;
@@ -58,7 +57,6 @@
             gap: 12px;
         }
 
-        /* Header Area */
         .app-header {
             display: flex;
             align-items: center;
@@ -149,7 +147,6 @@
             box-shadow: 0 2px 8px rgba(0, 179, 60, 0.4);
         }
 
-        /* Filter Section */
         .filter-section {
             background: var(--panel-bg);
             border: 1px solid var(--border-color);
@@ -223,7 +220,6 @@
             margin-left: 6px;
         }
 
-        /* Search input */
         .search-container {
             display: flex;
             align-items: center;
@@ -248,7 +244,6 @@
             box-shadow: 0 0 6px rgba(0, 212, 255, 0.3);
         }
 
-        /* Marquee Text Banner */
         .marquee-container {
             width: 100%;
             background: rgba(5, 18, 36, 0.9);
@@ -295,7 +290,6 @@
             display: block;
         }
 
-        /* Statistics Pills Bar */
         .stats-bar {
             display: flex;
             gap: 10px;
@@ -313,7 +307,6 @@
             gap: 6px;
         }
 
-        /* Table Responsive Container */
         .table-area {
             flex: 1;
             overflow-x: auto;
@@ -363,9 +356,7 @@
         tbody tr:nth-child(even) { background-color: var(--row-even); }
         tbody tr:nth-child(odd) { background-color: var(--row-odd); }
 
-        tbody tr:hover {
-            background-color: rgba(30, 82, 136, 0.4);
-        }
+        tbody tr:hover { background-color: rgba(30, 82, 136, 0.4); }
 
         td {
             padding: 8px 16px;
@@ -413,7 +404,10 @@
             font-size: 14px;
             margin: 10px 16px;
             display: none;
+            transition: background 0.2s ease;
         }
+
+        .btn-add-row:hover { background: #3399ff; }
 
         .btn-delete {
             background: #cc0000;
@@ -425,16 +419,13 @@
             font-size: 12px;
         }
 
+        .btn-delete:hover { background: #ff1a1a; }
+
         .editing-mode .th-actions,
-        .editing-mode .td-actions {
-            display: table-cell !important;
-        }
+        .editing-mode .td-actions { display: table-cell !important; }
 
-        .editing-mode .btn-add-row {
-            display: inline-block !important;
-        }
+        .editing-mode .btn-add-row { display: inline-block !important; }
 
-        /* Terms Disclaimer Modal Overlay */
         .terms-modal-overlay {
             display: flex;
             position: fixed;
@@ -462,12 +453,6 @@
             flex-direction: column;
             gap: 20px;
             text-align: center;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
         }
 
         .terms-header {
@@ -532,12 +517,6 @@
             opacity: 0.6;
         }
 
-        .terms-btn-enter:not(:disabled):hover {
-            background: #3399ff;
-            transform: translateY(-1px);
-        }
-
-        /* Password Modal Styling */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -567,10 +546,7 @@
             text-align: center;
         }
 
-        .modal-title {
-            font-size: 18px;
-            color: #ffffff;
-        }
+        .modal-title { font-size: 18px; color: #ffffff; }
 
         .modal-input {
             width: 100%;
@@ -584,16 +560,9 @@
             text-align: center;
         }
 
-        .modal-error {
-            color: #ff4d4d;
-            font-size: 13px;
-            display: none;
-        }
+        .modal-error { color: #ff4d4d; font-size: 13px; display: none; }
 
-        .modal-buttons {
-            display: flex;
-            gap: 10px;
-        }
+        .modal-buttons { display: flex; gap: 10px; }
 
         .modal-btn {
             flex: 1;
@@ -608,7 +577,6 @@
         .modal-btn-confirm { background: #0080ff; color: #ffffff; }
         .modal-btn-cancel { background: #4a6fa5; color: #ffffff; }
 
-        /* Footer */
         .app-footer {
             display: flex;
             justify-content: space-between;
@@ -630,13 +598,17 @@
         }
     </style>
 
-    <!-- Firebase Realtime Database SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <!-- Neon Serverless HTTP SDK -->
+    <script type="module">
+        import { neon } from "https://esm.sh/@neondatabase/serverless";
+        
+        // Replace with your actual Neon PostgreSQL connection string:
+        const NEON_DATABASE_URL = "postgresql://user:password@ep-xxx.neon.tech/neondb?sslmode=require";
+        window.sql = neon(NEON_DATABASE_URL);
+    </script>
 </head>
 <body>
 
-<!-- Terms of Use Disclaimer Modal Overlay -->
 <div class="terms-modal-overlay" id="termsModal">
     <div class="terms-card">
         <div class="terms-header">
@@ -654,7 +626,6 @@
 </div>
 
 <div class="app-container" id="app">
-    <!-- Top Header Bar -->
     <header class="app-header">
         <div class="header-title-group">
             <h1 class="app-title">3J功課大屏</h1>
@@ -662,14 +633,13 @@
         </div>
 
         <div class="header-action-group">
-            <div class="last-update-display" id="lastUpdateDisplay">最後更新：未有紀錄</div>
+            <div class="last-update-display" id="lastUpdateDisplay">最後更新：載入中...</div>
             <button class="btn-edit-toggle" id="btnEditToggle" onclick="handleEditClick()">
                 ✏ 編輯
             </button>
         </div>
     </header>
 
-    <!-- Filter Section -->
     <section class="filter-section">
         <div class="filter-row">
             <span class="filter-label">狀態篩選：</span>
@@ -701,7 +671,6 @@
         </div>
     </section>
 
-    <!-- Statistics Pills Bar -->
     <div class="stats-bar">
         <div class="stat-pill"><span style="color: var(--status-upcoming)">● 即將截止:</span> <span class="stat-count" id="countUpcoming" style="color: var(--status-upcoming)">0</span></div>
         <div class="stat-pill"><span style="color: var(--status-expired)">● 已截止:</span> <span class="stat-count" id="countExpired" style="color: var(--status-expired)">0</span></div>
@@ -710,7 +679,6 @@
         <div class="stat-pill"><span style="color: var(--status-unissued)">● 待發放:</span> <span class="stat-count" id="countUnissued" style="color: var(--status-unissued)">0</span></div>
     </div>
 
-    <!-- Table Container -->
     <main class="table-area" id="tableArea">
         <button class="btn-add-row" onclick="addNewRow()">＋ 新增功課</button>
         <table>
@@ -729,13 +697,11 @@
         <div id="emptyMessage" class="empty-state" style="display: none;">沒有符合條件的功課記錄</div>
     </main>
 
-    <!-- Footer Bar -->
     <footer class="app-footer">
         <div id="recordCounter">顯示 0 項 / 共 0 項</div>
     </footer>
 </div>
 
-<!-- Password Security Modal -->
 <div class="modal-overlay" id="passwordModal">
     <div class="modal-card">
         <div class="modal-title">🔒 請輸入編輯密碼</div>
@@ -749,19 +715,8 @@
 </div>
 
 <script>
-    // -------------------------------------------------------------
-    // Firebase Database Setup (Public Demo Project - Live Backend)
-    // -------------------------------------------------------------
-    const firebaseConfig = {
-        databaseURL: "https://homework-board-default-rtdb.firebaseio.com/"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    // System Password
     const EDIT_PASSWORD = "henry021412";
 
-    // Master Subjects list
     const SUBJECT_LIST = [
         "全部", "中國語文", "English Language", "Mathematics", "Chemistry", 
         "Geography", "History", "中國歷史", "公民、經濟及社會", "倫理與宗教", 
@@ -771,80 +726,163 @@
 
     const STATUS_LIST = ["即將截止", "已截止", "待截止", "晚點", "待發放"];
 
-    // Default Initial Dataset
-    const DEFAULT_DATA = [
-        { id: "PTH001", task: "普通話習作預備稿", subject: "普通話", date: "5/10/2026", status: "待截止" },
-        { id: "CHIN007", task: "作文改正", subject: "中國語文", date: "30/9/2026", status: "已截止" },
-        { id: "CHIN009", task: "課後延伸", subject: "中國語文", date: "5/10/2026", status: "待截止" },
-        { id: "ENG010", task: "VRSS p.47-48", subject: "English Language", date: "7/10/2026", status: "待截止" },
-        { id: "CHIN006", task: "課文測驗", subject: "中國語文", date: "22/10/2026", status: "晚點" },
-        { id: "ENG009", task: "Borrow an English Book", subject: "English Language", date: "30/9/2026", status: "已截止" },
-        { id: "BIO003", task: "WS p.7-10", subject: "Biology", date: "2/10/2026", status: "已截止" },
-        { id: "HIST002", task: "Reading Task", subject: "History", date: "30/9/2026", status: "已截止" },
-        { id: "GOEG005", task: "Complete the WHOLE map reading workbook", subject: "Geography", date: "6/10/2026", status: "待截止" },
-        { id: "E&RE001", task: "Note P.5 (Case 2)", subject: "倫理與宗教", date: "30/9/2026", status: "已截止" },
-        { id: "VA005", task: "Carton Carving", subject: "Visual Arts", date: "8/10/2026", status: "待截止" },
-        { id: "CHIN008", task: "詳盡閱讀報告", subject: "中國語文", date: "20/10/2026", status: "待截止" },
-        { id: "ENG011", task: "Unseen Dictation and Vocabulary Quiz", subject: "English Language", date: "9/10/2026", status: "待截止" },
-        { id: "ENG012", task: "GB Unit 4", subject: "English Language", date: "2/10/2026", status: "已截止" },
-        { id: "MATH009", task: "", subject: "", date: "", status: "" },
-        { id: "CHIN004", task: "隨筆 2", subject: "中國語文", date: "7/10/2026", status: "待截止" }
-    ];
-
-    const DEFAULT_MARQUEE_TEXT = "📢 歡迎使用 3J 功課大屏！請準時交功課，勤奮學習！";
-
-    // State Variables
     let homeworkList = [];
-    let marqueeText = DEFAULT_MARQUEE_TEXT;
+    let marqueeText = "📢 歡迎使用 3J 功課大屏！請準時交功課，勤奮學習！";
     let lastUpdateTime = "";
     let currentStatusFilter = "ALL";
     let currentSubjectFilter = "ALL";
     let currentSearchTerm = "";
     let isEditing = false;
 
-    // Initialization
     window.addEventListener("DOMContentLoaded", () => {
         checkDisclaimerConsent();
-        initDatabaseListener();
         initSubjectFilterButtons();
         updateClock();
+        
+        // Wait for Neon SQL SDK to initialize
+        const waitForNeon = setInterval(() => {
+            if (window.sql) {
+                clearInterval(waitForNeon);
+                fetchDataFromNeon();
+                // Live sync polling every 3 seconds across all users
+                setInterval(fetchDataFromNeon, 3000);
+            }
+        }, 200);
+
         setInterval(() => {
             updateClock();
             checkAndAutoUpdateStatuses();
         }, 1000);
     });
 
-    // Realtime Database Listener for Multi-User Real-time Sync
-    function initDatabaseListener() {
-        db.ref("appState").on("value", (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                homeworkList = data.homeworkList || [];
-                marqueeText = data.marqueeText || DEFAULT_MARQUEE_TEXT;
-                lastUpdateTime = data.lastUpdateTime || "";
-            } else {
-                homeworkList = [...DEFAULT_DATA];
-                marqueeText = DEFAULT_MARQUEE_TEXT;
-                lastUpdateTime = "";
-                saveData();
-            }
+    // Fetch live state from Neon DB
+    async function fetchDataFromNeon() {
+        if (!window.sql) return;
+        try {
+            const rows = await window.sql`SELECT id, task, subject, due_date AS date, status FROM homework ORDER BY created_at DESC;`;
+            const meta = await window.sql`SELECT key, value FROM app_metadata;`;
+
+            homeworkList = rows.map(r => ({
+                id: r.id,
+                task: r.task,
+                subject: r.subject,
+                date: r.date,
+                status: r.status
+            }));
+
+            meta.forEach(item => {
+                if (item.key === 'marquee_text') marqueeText = item.value;
+                if (item.key === 'last_update_time') lastUpdateTime = item.value;
+            });
+
             initMarquee();
             renderLastUpdateTime();
-            checkAndAutoUpdateStatuses();
+            if (!isEditing) render();
+        } catch (err) {
+            console.error("Neon DB fetch error:", err);
+        }
+    }
+
+    async function addNewRow() {
+        const now = new Date();
+        const todayFormatted = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
+        const newId = "HW" + String(Math.floor(Math.random() * 900) + 100);
+        const newTask = "新功課內容";
+        const newSubject = "中國語文";
+        const newStatus = "待截止";
+
+        homeworkList.unshift({
+            id: newId,
+            task: newTask,
+            subject: newSubject,
+            date: todayFormatted,
+            status: newStatus
+        });
+
+        try {
+            await window.sql`
+                INSERT INTO homework (id, task, subject, due_date, status)
+                VALUES (${newId}, ${newTask}, ${newSubject}, ${todayFormatted}, ${newStatus});
+            `;
+            await updateLastEditTimestamp();
             render();
-        });
+        } catch (err) {
+            console.error("Error inserting row:", err);
+        }
     }
 
-    // Save Data directly to central database
-    function saveData() {
-        db.ref("appState").set({
-            homeworkList: homeworkList,
-            marqueeText: marqueeText,
-            lastUpdateTime: lastUpdateTime
-        });
+    async function deleteRow(index) {
+        const target = homeworkList[index];
+        homeworkList.splice(index, 1);
+
+        try {
+            await window.sql`DELETE FROM homework WHERE id = ${target.id};`;
+            await updateLastEditTimestamp();
+            render();
+        } catch (err) {
+            console.error("Error deleting row:", err);
+        }
     }
 
-    // Terms of Use Modal Logic
+    async function updateFieldValue(index, field, value) {
+        const oldId = homeworkList[index].id;
+        homeworkList[index][field] = value;
+
+        try {
+            if (field === 'id') {
+                await window.sql`UPDATE homework SET id = ${value} WHERE id = ${oldId};`;
+            } else if (field === 'task') {
+                await window.sql`UPDATE homework SET task = ${value} WHERE id = ${oldId};`;
+            } else if (field === 'subject') {
+                await window.sql`UPDATE homework SET subject = ${value} WHERE id = ${oldId};`;
+            } else if (field === 'date') {
+                await window.sql`UPDATE homework SET due_date = ${value} WHERE id = ${oldId};`;
+            } else if (field === 'status') {
+                await window.sql`UPDATE homework SET status = ${value} WHERE id = ${oldId};`;
+            }
+            await updateLastEditTimestamp();
+            renderStatsAndCount();
+        } catch (err) {
+            console.error("Error updating field:", err);
+        }
+    }
+
+    async function updateMarqueeText(val) {
+        marqueeText = val || "📢 歡迎使用 3J 功課大屏！請準時交功課，勤奮學習！";
+        document.getElementById("marqueeDisplay").textContent = marqueeText;
+        
+        try {
+            await window.sql`
+                INSERT INTO app_metadata (key, value) VALUES ('marquee_text', ${marqueeText})
+                ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
+            `;
+            await updateLastEditTimestamp();
+        } catch (err) {
+            console.error("Error updating marquee:", err);
+        }
+    }
+
+    async function updateLastEditTimestamp() {
+        const now = new Date();
+        const dd = String(now.getDate()).padStart(2, '0');
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const yyyy = now.getFullYear();
+        const hh = String(now.getHours()).padStart(2, '0');
+        const min = String(now.getMinutes()).padStart(2, '0');
+        
+        lastUpdateTime = `${dd}/${mm}/${yyyy} ${hh}:${min}`;
+        renderLastUpdateTime();
+
+        try {
+            await window.sql`
+                INSERT INTO app_metadata (key, value) VALUES ('last_update_time', ${lastUpdateTime})
+                ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
+            `;
+        } catch (err) {
+            console.error("Error updating timestamp:", err);
+        }
+    }
+
     function checkDisclaimerConsent() {
         document.getElementById("termsModal").style.display = "flex";
         document.getElementById("agreeCheckbox").checked = false;
@@ -860,41 +898,18 @@
         document.getElementById("termsModal").style.display = "none";
     }
 
-    function updateLastEditTimestamp() {
-        const now = new Date();
-        const dd = String(now.getDate()).padStart(2, '0');
-        const mm = String(now.getMonth() + 1).padStart(2, '0');
-        const yyyy = now.getFullYear();
-        const hh = String(now.getHours()).padStart(2, '0');
-        const min = String(now.getMinutes()).padStart(2, '0');
-        
-        lastUpdateTime = `${dd}/${mm}/${yyyy} ${hh}:${min}`;
-        renderLastUpdateTime();
-    }
-
     function renderLastUpdateTime() {
         const display = document.getElementById("lastUpdateDisplay");
-        if (lastUpdateTime) {
-            display.textContent = `最後更新：${lastUpdateTime}`;
-        } else {
-            display.textContent = `最後更新：未有紀錄`;
+        display.textContent = lastUpdateTime ? `最後更新：${lastUpdateTime}` : `最後更新：未有紀錄`;
+    }
+
+    function initMarquee() {
+        document.getElementById("marqueeDisplay").textContent = marqueeText;
+        if (!isEditing) {
+            document.getElementById("marqueeInput").value = marqueeText;
         }
     }
 
-    // Marquee
-    function initMarquee() {
-        document.getElementById("marqueeDisplay").textContent = marqueeText;
-        document.getElementById("marqueeInput").value = marqueeText;
-    }
-
-    function updateMarqueeText(val) {
-        marqueeText = val || DEFAULT_MARQUEE_TEXT;
-        document.getElementById("marqueeDisplay").textContent = marqueeText;
-        updateLastEditTimestamp();
-        saveData();
-    }
-
-    // Auto update logic based on dates
     function parseDueDate(dateStr) {
         if (!dateStr) return null;
         const parts = dateStr.split('/');
@@ -906,7 +921,7 @@
         return new Date(year, month, day, 0, 0, 0, 0);
     }
 
-    function checkAndAutoUpdateStatuses() {
+    async function checkAndAutoUpdateStatuses() {
         const now = new Date();
         let changed = false;
 
@@ -925,24 +940,23 @@
 
             if (item.status === "即將截止" && now >= dueDate) {
                 item.status = "已截止";
+                await updateFieldValue(i, 'status', "已截止");
                 changed = true;
             }
 
             if (item.status === "待截止" && now >= dayBeforeDueDate) {
                 item.status = "即將截止";
+                await updateFieldValue(i, 'status', "即將截止");
                 changed = true;
             }
 
             if (item.status === "已截止" && now >= threeDaysAfterDueDate) {
-                homeworkList.splice(i, 1);
+                await deleteRow(i);
                 changed = true;
             }
         }
 
-        if (changed) {
-            saveData();
-            render();
-        }
+        if (changed) render();
     }
 
     function updateClock() {
@@ -956,7 +970,6 @@
         document.getElementById('clockDisplay').textContent = `${dd}/${mm}/${yyyy} ${hh}:${min}:${ss}`;
     }
 
-    // Dynamic Subject Filters
     function initSubjectFilterButtons() {
         const container = document.getElementById("subjectFilterGroup");
         container.innerHTML = "";
@@ -972,26 +985,16 @@
 
     function setStatusFilter(status) {
         currentStatusFilter = status;
-        const buttons = document.querySelectorAll("#statusFilterGroup .filter-btn");
-        buttons.forEach(btn => {
-            if (btn.dataset.status === status) {
-                btn.classList.add("active");
-            } else {
-                btn.classList.remove("active");
-            }
+        document.querySelectorAll("#statusFilterGroup .filter-btn").forEach(btn => {
+            btn.classList.toggle("active", btn.dataset.status === status);
         });
         render();
     }
 
     function setSubjectFilter(subject) {
         currentSubjectFilter = subject;
-        const buttons = document.querySelectorAll("#subjectFilterGroup .filter-btn");
-        buttons.forEach(btn => {
-            if (btn.dataset.subject === subject) {
-                btn.classList.add("active");
-            } else {
-                btn.classList.remove("active");
-            }
+        document.querySelectorAll("#subjectFilterGroup .filter-btn").forEach(btn => {
+            btn.classList.toggle("active", btn.dataset.subject === subject);
         });
         render();
     }
@@ -1008,7 +1011,6 @@
         render();
     }
 
-    // Password & Edit Mode Handlers
     function handleEditClick() {
         if (isEditing) {
             isEditing = false;
@@ -1048,35 +1050,6 @@
         }
     }
 
-    // Homework Row Manipulation
-    function addNewRow() {
-        homeworkList.unshift({
-            id: "NEW" + Math.floor(Math.random() * 1000),
-            task: "新功課",
-            subject: "中國語文",
-            date: "1/10/2026",
-            status: "待截止"
-        });
-        updateLastEditTimestamp();
-        saveData();
-        render();
-    }
-
-    function deleteRow(index) {
-        homeworkList.splice(index, 1);
-        updateLastEditTimestamp();
-        saveData();
-        render();
-    }
-
-    function updateFieldValue(index, field, value) {
-        homeworkList[index][field] = value;
-        updateLastEditTimestamp();
-        saveData();
-        renderStatsAndCount();
-    }
-
-    // Core UI Rendering Logic
     function render() {
         const tbody = document.getElementById("homeworkTableBody");
         tbody.innerHTML = "";
@@ -1092,18 +1065,13 @@
             return matchesStatus && matchesSubject && matchesSearch;
         });
 
-        if (filteredList.length === 0) {
-            document.getElementById("emptyMessage").style.display = "block";
-        } else {
-            document.getElementById("emptyMessage").style.display = "none";
-        }
+        document.getElementById("emptyMessage").style.display = filteredList.length === 0 ? "block" : "none";
 
         filteredList.forEach((item) => {
             const actualIndex = homeworkList.indexOf(item);
             const tr = document.createElement("tr");
 
             if (isEditing) {
-                // Editing Row Template
                 let subjectOptions = SUBJECT_LIST.filter(s => s !== "全部").map(s => 
                     `<option value="${s}" ${s === item.subject ? 'selected' : ''}>${s}</option>`
                 ).join("");
@@ -1131,7 +1099,6 @@
                     </td>
                 `;
             } else {
-                // View Mode Row Template
                 const statusClass = item.status ? `status-${item.status}` : '';
                 tr.innerHTML = `
                     <td>${item.id || ''}</td>
