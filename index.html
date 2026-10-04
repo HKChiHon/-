@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3J功課大屏 (Neon Connected)</title>
     <style>
-        /* MTR Font Stack & Styling */
         @font-family {
             font-family: 'MTR Sung';
             src: local('MTR Sung'), local('MTR-Sung'), local('MTRFont'), local('港鐵宋體'), local('MingLiU');
@@ -21,7 +20,6 @@
             --row-odd: rgba(12, 43, 80, 0.85);
             --text-main: #ffffff;
             
-            /* Status Colors */
             --status-upcoming: #ffff00;
             --status-expired: #ff4d4d;
             --status-pending: #00ff66;
@@ -602,7 +600,7 @@
     <script type="module">
         import { neon } from "https://esm.sh/@neondatabase/serverless";
         
-        // Neon Database Connection String
+        // Cleaned Connection String (Removed channel_binding for browser compatibility)
         const NEON_DATABASE_URL = "postgresql://neondb_owner:npg_6JoszeNObk8p@ep-calm-darkness-b5lh4obr-pooler.c-7.us-east-2.aws.neon.tech/neondb?sslmode=require";
         window.sql = neon(NEON_DATABASE_URL);
     </script>
@@ -739,12 +737,10 @@
         initSubjectFilterButtons();
         updateClock();
         
-        // Wait for Neon SQL SDK to initialize
         const waitForNeon = setInterval(() => {
             if (window.sql) {
                 clearInterval(waitForNeon);
                 fetchDataFromNeon();
-                // Live sync polling every 3 seconds across all users
                 setInterval(fetchDataFromNeon, 3000);
             }
         }, 200);
@@ -755,7 +751,6 @@
         }, 1000);
     });
 
-    // Fetch live state from Neon DB
     async function fetchDataFromNeon() {
         if (!window.sql) return;
         try {
