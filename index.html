@@ -12,6 +12,8 @@
 
         :root {
             --mtr-font: 'MTR Sung', 'MTRFont', '港鐵宋體', 'MingLiU', 'PMingLiU', 'Microsoft JhengHei', sans-serif, serif;
+            
+            /* Dynamic Theme Variables (Default: Original) */
             --bg-gradient: linear-gradient(135deg, #061527 0%, #0a2540 50%, #0d1b2a 100%);
             --panel-bg: rgba(13, 40, 71, 0.85);
             --border-color: rgba(30, 82, 136, 0.6);
@@ -19,12 +21,58 @@
             --row-even: rgba(10, 35, 66, 0.85);
             --row-odd: rgba(12, 43, 80, 0.85);
             --text-main: #ffffff;
+            --subtext-color: #8ab4f8;
+            --table-id-color: #b3d9ff;
+            --table-date-color: #d0e4ff;
             
             --status-upcoming: #ffff00;
             --status-expired: #ff4d4d;
             --status-pending: #00ff66;
             --status-late: #c05cff;
             --status-unissued: #00e5ff;
+
+            /* Base Font Scale multiplier controlled by Settings */
+            --font-scale: 1;
+        }
+
+        /* Theme Overrides with Accessible Text Contrast */
+        body.theme-dark-red {
+            --bg-gradient: linear-gradient(135deg, #1f0505 0%, #3a0a0a 50%, #290808 100%);
+            --panel-bg: rgba(55, 15, 15, 0.85);
+            --border-color: rgba(140, 40, 40, 0.6);
+            --header-bg: #4a1010;
+            --row-even: rgba(50, 15, 15, 0.85);
+            --row-odd: rgba(60, 20, 20, 0.85);
+            --text-main: #ffffff;
+            --subtext-color: #ffb3b3;
+            --table-id-color: #ffd6d6;
+            --table-date-color: #ffe6e6;
+        }
+
+        body.theme-light-yellow {
+            --bg-gradient: linear-gradient(135deg, #fdfbf7 0%, #f5eedc 50%, #ebe3cf 100%);
+            --panel-bg: rgba(255, 252, 242, 0.92);
+            --border-color: rgba(180, 140, 80, 0.5);
+            --header-bg: #e6d3a3;
+            --row-even: rgba(250, 245, 230, 0.95);
+            --row-odd: rgba(242, 235, 215, 0.95);
+            --text-main: #221a0f;
+            --subtext-color: #594014;
+            --table-id-color: #422d0a;
+            --table-date-color: #332105;
+        }
+
+        body.theme-light-blue {
+            --bg-gradient: linear-gradient(135deg, #f0f7ff 0%, #dbeafe 50%, #c1e0ff 100%);
+            --panel-bg: rgba(240, 246, 255, 0.92);
+            --border-color: rgba(125, 175, 230, 0.7);
+            --header-bg: #bfdbfe;
+            --row-even: rgba(239, 246, 255, 0.95);
+            --row-odd: rgba(219, 234, 254, 0.95);
+            --text-main: #0f172a;
+            --subtext-color: #1e40af;
+            --table-id-color: #1e3a8a;
+            --table-date-color: #172554;
         }
 
         * {
@@ -42,6 +90,7 @@
             font-weight: 300;
             -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
+            transition: background 0.4s ease, color 0.4s ease;
         }
 
         .app-container {
@@ -64,7 +113,7 @@
             padding: 12px 20px;
             border-radius: 8px;
             backdrop-filter: blur(10px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             flex-wrap: wrap;
             gap: 10px;
         }
@@ -72,7 +121,7 @@
         .header-title-group {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
             flex-wrap: wrap;
         }
 
@@ -84,10 +133,10 @@
         }
 
         .app-title {
-            font-size: 24px;
+            font-size: calc(24px * var(--font-scale));
             font-weight: 400;
             letter-spacing: 2px;
-            color: #ffffff;
+            color: var(--text-main);
             font-family: var(--mtr-font);
             text-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
             white-space: nowrap;
@@ -95,25 +144,127 @@
 
         .clock-display {
             font-family: var(--mtr-font);
-            font-size: 18px;
+            font-size: calc(18px * var(--font-scale));
             font-weight: 300;
-            color: #ffffff;
+            color: var(--text-main);
             letter-spacing: 1px;
             padding: 4px 12px;
             background: rgba(255, 255, 255, 0.08);
             border-radius: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            border: 1px solid var(--border-color);
             white-space: nowrap;
+        }
+
+        .btn-settings {
+            background: rgba(255, 255, 255, 0.12);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: calc(14px * var(--font-scale));
+            font-family: var(--mtr-font);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn-settings:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.03);
+        }
+
+        /* Expanded Music Player Styling */
+        .music-player-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-color);
+            padding: 4px 10px;
+            border-radius: 6px;
+            white-space: nowrap;
+            max-width: 380px;
+        }
+
+        .disk-icon {
+            display: inline-block;
+            font-size: calc(16px * var(--font-scale));
+            transition: transform 0.2s linear;
+        }
+
+        .disk-icon.spinning {
+            animation: spin 3s linear infinite;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        .music-marquee-box {
+            width: 140px;
+            overflow: hidden;
+            white-space: nowrap;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            padding: 3px 0;
+            border: 1px solid var(--border-color);
+        }
+
+        .music-marquee-text {
+            display: inline-block;
+            padding-left: 100%;
+            animation: musicMarquee 12s linear infinite;
+            font-size: calc(12px * var(--font-scale));
+            color: var(--subtext-color);
+            font-family: var(--mtr-font);
+        }
+
+        @keyframes musicMarquee {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-100%, 0); }
+        }
+
+        .btn-music-toggle {
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 3px 8px;
+            font-size: calc(13px * var(--font-scale));
+            font-family: var(--mtr-font);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-music-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .volume-icon {
+            font-size: calc(12px * var(--font-scale));
+            color: var(--subtext-color);
+        }
+
+        .volume-slider {
+            width: 50px;
+            accent-color: #0080ff;
+            cursor: pointer;
         }
 
         .last-update-display {
             font-family: var(--mtr-font);
-            font-size: 14px;
-            color: #8ab4f8;
-            background: rgba(0, 0, 0, 0.3);
+            font-size: calc(14px * var(--font-scale));
+            color: var(--subtext-color);
+            background: rgba(0, 0, 0, 0.15);
             padding: 6px 12px;
             border-radius: 6px;
-            border: 1px solid rgba(77, 166, 255, 0.3);
+            border: 1px solid var(--border-color);
             white-space: nowrap;
         }
 
@@ -123,7 +274,7 @@
             border: none;
             padding: 8px 18px;
             border-radius: 6px;
-            font-size: 15px;
+            font-size: calc(15px * var(--font-scale));
             font-weight: 400;
             font-family: var(--mtr-font);
             cursor: pointer;
@@ -164,9 +315,9 @@
         }
 
         .filter-label {
-            font-size: 14px;
+            font-size: calc(14px * var(--font-scale));
             font-weight: 400;
-            color: #8ab4f8;
+            color: var(--subtext-color);
             min-width: 70px;
             white-space: nowrap;
         }
@@ -180,11 +331,11 @@
 
         .filter-btn {
             background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: #d1e4ff;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
             padding: 5px 11px;
             border-radius: 4px;
-            font-size: 13px;
+            font-size: calc(13px * var(--font-scale));
             font-weight: 300;
             font-family: var(--mtr-font);
             cursor: pointer;
@@ -194,7 +345,6 @@
 
         .filter-btn:hover {
             background: rgba(255, 255, 255, 0.18);
-            color: #ffffff;
         }
 
         .filter-btn.active {
@@ -212,9 +362,9 @@
         .filter-btn[data-status="待發放"].active { background: #006680; border-color: #00e5ff; color: #ccf8ff; }
 
         .btn-reset {
-            background: #2a3f5f;
-            border: 1px solid #4a6fa5;
-            color: #e0f0ff;
+            background: rgba(42, 63, 95, 0.8);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
             margin-left: 6px;
         }
 
@@ -227,12 +377,12 @@
 
         .search-input {
             flex: 1;
-            background: rgba(5, 18, 36, 0.8);
-            border: 1px solid rgba(77, 166, 255, 0.4);
+            background: rgba(0, 0, 0, 0.15);
+            border: 1px solid var(--border-color);
             border-radius: 4px;
             padding: 8px 12px;
-            color: #ffffff;
-            font-size: 14px;
+            color: var(--text-main);
+            font-size: calc(14px * var(--font-scale));
             font-family: var(--mtr-font);
             outline: none;
         }
@@ -244,7 +394,7 @@
 
         .marquee-container {
             width: 100%;
-            background: rgba(5, 18, 36, 0.9);
+            background: rgba(0, 0, 0, 0.15);
             border: 1px solid rgba(255, 204, 0, 0.4);
             border-radius: 4px;
             overflow: hidden;
@@ -256,10 +406,16 @@
             display: inline-block;
             padding-left: 100%;
             animation: marquee 18s linear infinite;
-            color: #ffcc00;
-            font-size: 14px;
+            color: #d9a300;
+            font-size: calc(14px * var(--font-scale));
             letter-spacing: 1px;
             font-family: var(--mtr-font);
+            font-weight: 400;
+        }
+
+        body.theme-original .marquee-content,
+        body.theme-dark-red .marquee-content {
+            color: #ffcc00;
         }
 
         @keyframes marquee {
@@ -279,7 +435,7 @@
             border-radius: 4px;
             padding: 8px 12px;
             color: #ffcc00;
-            font-size: 14px;
+            font-size: calc(14px * var(--font-scale));
             font-family: var(--mtr-font);
             outline: none;
         }
@@ -295,14 +451,15 @@
         }
 
         .stat-pill {
-            background: rgba(10, 30, 55, 0.7);
+            background: var(--panel-bg);
             border: 1px solid var(--border-color);
             padding: 6px 14px;
             border-radius: 20px;
-            font-size: 13px;
+            font-size: calc(13px * var(--font-scale));
             display: flex;
             align-items: center;
             gap: 6px;
+            color: var(--text-main);
         }
 
         .table-area {
@@ -312,7 +469,7 @@
             background: var(--panel-bg);
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
             max-height: 60vh;
             -webkit-overflow-scrolling: touch;
         }
@@ -320,7 +477,7 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 15px;
+            font-size: calc(15px * var(--font-scale));
             min-width: 650px;
         }
 
@@ -334,9 +491,9 @@
         th {
             padding: 12px 16px;
             font-weight: 400;
-            color: #ffffff;
+            color: var(--text-main);
             text-align: left;
-            border-bottom: 2px solid #1e5288;
+            border-bottom: 2px solid var(--border-color);
         }
 
         th:nth-child(1) { text-align: center; width: 110px; }
@@ -348,31 +505,46 @@
 
         tbody tr {
             height: 42px;
-            border-bottom: 1px solid rgba(15, 52, 93, 0.6);
+            border-bottom: 1px solid var(--border-color);
         }
 
         tbody tr:nth-child(even) { background-color: var(--row-even); }
         tbody tr:nth-child(odd) { background-color: var(--row-odd); }
 
-        tbody tr:hover { background-color: rgba(30, 82, 136, 0.4); }
+        tbody tr:hover { background-color: rgba(255, 255, 255, 0.1); }
 
         td {
             padding: 8px 16px;
             vertical-align: middle;
         }
 
-        td:nth-child(1) { text-align: center; color: #b3d9ff; }
-        td:nth-child(2) { text-align: left; }
-        td:nth-child(3) { text-align: center; }
-        td:nth-child(4) { text-align: center; color: #d0e4ff; }
+        td:nth-child(1) { text-align: center; color: var(--table-id-color); font-weight: 400; }
+        td:nth-child(2) { text-align: left; color: var(--text-main); }
+        td:nth-child(3) { text-align: center; color: var(--text-main); }
+        td:nth-child(4) { text-align: center; color: var(--table-date-color); font-weight: 400; }
         td:nth-child(5) { text-align: center; font-weight: 400; }
         .td-actions { text-align: center; display: none; }
 
+        /* Status Colors mapping across themes */
         .status-即將截止 { color: var(--status-upcoming); }
         .status-已截止 { color: var(--status-expired); }
         .status-待截止 { color: var(--status-pending); }
         .status-晚點 { color: var(--status-late); }
         .status-待發放 { color: var(--status-unissued); }
+
+        /* Dark background status colors */
+        body.theme-original .status-即將截止, body.theme-dark-red .status-即將截止 { color: #ffff00; }
+        body.theme-original .status-已截止, body.theme-dark-red .status-已截止 { color: #ff4d4d; }
+        body.theme-original .status-待截止, body.theme-dark-red .status-待截止 { color: #00ff66; }
+        body.theme-original .status-晚點, body.theme-dark-red .status-晚點 { color: #c05cff; }
+        body.theme-original .status-待發放, body.theme-dark-red .status-待發放 { color: #00e5ff; }
+
+        /* Light background status colors */
+        body.theme-light-yellow .status-即將截止, body.theme-light-blue .status-即將截止 { color: #b37400; font-weight: 600; }
+        body.theme-light-yellow .status-已截止, body.theme-light-blue .status-已截止 { color: #cc0000; font-weight: 600; }
+        body.theme-light-yellow .status-待截止, body.theme-light-blue .status-待截止 { color: #00802b; font-weight: 600; }
+        body.theme-light-yellow .status-晚點, body.theme-light-blue .status-晚點 { color: #7000cc; font-weight: 600; }
+        body.theme-light-yellow .status-待發放, body.theme-light-blue .status-待發放 { color: #007399; font-weight: 600; }
 
         .editable-input, .editable-select {
             background: rgba(5, 18, 36, 0.9);
@@ -381,7 +553,7 @@
             padding: 5px 8px;
             border-radius: 4px;
             font-family: var(--mtr-font);
-            font-size: 14px;
+            font-size: calc(14px * var(--font-scale));
             width: 100%;
             outline: none;
         }
@@ -399,7 +571,7 @@
             border-radius: 4px;
             cursor: pointer;
             font-family: var(--mtr-font);
-            font-size: 14px;
+            font-size: calc(14px * var(--font-scale));
             margin: 10px 16px;
             display: none;
             transition: background 0.2s ease;
@@ -414,7 +586,7 @@
             padding: 4px 8px;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: calc(12px * var(--font-scale));
         }
 
         .btn-delete:hover { background: #ff1a1a; }
@@ -424,19 +596,47 @@
 
         .editing-mode .btn-add-row { display: inline-block !important; }
 
-        .terms-modal-overlay {
-            display: flex;
+        /* Smooth Animation Overlay Base */
+        .modal-overlay, .terms-modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(2, 8, 16, 0.88);
-            backdrop-filter: blur(8px);
-            z-index: 2000;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 16px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.active, .terms-modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 24px;
+            width: 100%;
+            max-width: 380px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            transform: scale(0.85);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-overlay.active .modal-card, .terms-modal-overlay.active .terms-card {
+            transform: scale(1);
         }
 
         .terms-card {
@@ -451,10 +651,12 @@
             flex-direction: column;
             gap: 20px;
             text-align: center;
+            transform: scale(0.85);
+            transition: transform 0.3s ease;
         }
 
         .terms-header {
-            font-size: 20px;
+            font-size: calc(20px * var(--font-scale));
             color: #ffcc00;
             font-weight: 400;
             display: flex;
@@ -470,7 +672,7 @@
             border: 1px solid rgba(255, 204, 0, 0.3);
             border-radius: 6px;
             padding: 16px;
-            font-size: 16px;
+            font-size: calc(16px * var(--font-scale));
             line-height: 1.6;
             color: #ffffff;
             text-align: left;
@@ -481,7 +683,7 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-            font-size: 15px;
+            font-size: calc(15px * var(--font-scale));
             color: #d1e4ff;
             cursor: pointer;
             user-select: none;
@@ -501,7 +703,7 @@
             border: none;
             padding: 10px;
             border-radius: 6px;
-            font-size: 16px;
+            font-size: calc(16px * var(--font-scale));
             font-family: var(--mtr-font);
             cursor: pointer;
             transition: all 0.2s ease;
@@ -515,36 +717,73 @@
             opacity: 0.6;
         }
 
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(5px);
-            z-index: 1000;
-            justify-content: center;
+        /* Settings Modal Styling */
+        .settings-header {
+            font-size: calc(18px * var(--font-scale));
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            padding: 16px;
         }
 
-        .modal-card {
-            background: #092e4e;
-            border: 1px solid #4da6ff;
-            border-radius: 8px;
-            padding: 24px;
-            width: 100%;
-            max-width: 320px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+        .setting-group {
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            text-align: center;
+            gap: 8px;
+            text-align: left;
         }
 
-        .modal-title { font-size: 18px; color: #ffffff; }
+        .setting-label {
+            font-size: calc(14px * var(--font-scale));
+            color: var(--subtext-color);
+        }
+
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .theme-btn {
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-main);
+            font-family: var(--mtr-font);
+            font-size: calc(13px * var(--font-scale));
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .theme-btn:hover, .theme-btn.active {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.2);
+            font-weight: 400;
+        }
+
+        .font-slider-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .font-slider {
+            flex: 1;
+            accent-color: #0080ff;
+            cursor: pointer;
+        }
+
+        .font-val-badge {
+            font-size: calc(13px * var(--font-scale));
+            color: var(--text-main);
+            min-width: 40px;
+            text-align: right;
+        }
+
+        .modal-title { font-size: calc(18px * var(--font-scale)); color: var(--text-main); text-align: center; }
 
         .modal-input {
             width: 100%;
@@ -553,14 +792,14 @@
             border-radius: 4px;
             padding: 8px 12px;
             color: #ffffff;
-            font-size: 15px;
+            font-size: calc(15px * var(--font-scale));
             outline: none;
             text-align: center;
         }
 
-        .modal-error { color: #ff4d4d; font-size: 13px; display: none; }
+        .modal-error { color: #ff4d4d; font-size: calc(13px * var(--font-scale)); display: none; text-align: center; }
 
-        .modal-buttons { display: flex; gap: 10px; }
+        .modal-buttons { display: flex; gap: 10px; margin-top: 6px; }
 
         .modal-btn {
             flex: 1;
@@ -569,11 +808,15 @@
             border: none;
             cursor: pointer;
             font-family: var(--mtr-font);
-            font-size: 14px;
+            font-size: calc(14px * var(--font-scale));
+            transition: opacity 0.2s;
         }
+
+        .modal-btn:hover { opacity: 0.9; }
 
         .modal-btn-confirm { background: #0080ff; color: #ffffff; }
         .modal-btn-cancel { background: #4a6fa5; color: #ffffff; }
+        .modal-btn-reset { background: #b33939; color: #ffffff; }
 
         .app-footer {
             display: flex;
@@ -583,16 +826,16 @@
             border: 1px solid var(--border-color);
             padding: 10px 18px;
             border-radius: 8px;
-            font-size: 13px;
-            color: #7b9ebd;
+            font-size: calc(13px * var(--font-scale));
+            color: var(--subtext-color);
             margin-top: auto;
         }
 
         .empty-state {
             text-align: center;
             padding: 35px;
-            color: #5d82a6;
-            font-size: 15px;
+            color: var(--subtext-color);
+            font-size: calc(15px * var(--font-scale));
         }
     </style>
 
@@ -607,10 +850,15 @@
 </head>
 <body>
 
+<!-- Local WAV Audio File -->
+<audio id="bgAudio" loop preload="auto">
+    <source src="All Through The Night (Piano).wav" type="audio/wav">
+</audio>
+
 <div class="terms-modal-overlay" id="termsModal">
     <div class="terms-card">
         <div class="terms-header">
-            <span>⚠️</span> 系統提示與免責聲明
+            <span>⚠</span> 系統提示與免責聲明
         </div>
         <div class="terms-content-box">
             此表只供參考，功課的繳交時間以科任老師的宣佈為準則！
@@ -628,6 +876,20 @@
         <div class="header-title-group">
             <h1 class="app-title">3J功課大屏</h1>
             <div class="clock-display" id="clockDisplay">--/--/---- --:--:--</div>
+            <button class="btn-settings" onclick="openSettingsModal()">⚙ 設定</button>
+            
+            <!-- Lengthened Music Player Interface -->
+            <div class="music-player-container">
+                <span class="disk-icon" id="diskIcon">💽</span>
+                <div class="music-marquee-box">
+                    <div class="music-marquee-text">NOW PLAYING: All Through The Night (Piano)</div>
+                </div>
+                <button class="btn-music-toggle" id="btnMusicToggle" onclick="toggleMusic()">▶</button>
+                <div class="volume-container">
+                    <span class="volume-icon">🔊</span>
+                    <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.05" value="0.5" oninput="changeVolume(this.value)">
+                </div>
+            </div>
         </div>
 
         <div class="header-action-group">
@@ -700,6 +962,7 @@
     </footer>
 </div>
 
+<!-- Password Modal -->
 <div class="modal-overlay" id="passwordModal">
     <div class="modal-card">
         <div class="modal-title">🔒 請輸入編輯密碼</div>
@@ -708,6 +971,38 @@
         <div class="modal-buttons">
             <button class="modal-btn modal-btn-cancel" onclick="closePasswordModal()">取消</button>
             <button class="modal-btn modal-btn-confirm" onclick="verifyPassword()">確認</button>
+        </div>
+    </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal">
+    <div class="modal-card">
+        <div class="settings-header">
+            <span>⚙ 頁面設定 (Settings)</span>
+        </div>
+        
+        <div class="setting-group">
+            <span class="setting-label">文字大小 (Font Size):</span>
+            <div class="font-slider-container">
+                <input type="range" min="0.8" max="1.3" step="0.05" value="1" id="fontSizeSlider" class="font-slider" oninput="changeFontSize(this.value)">
+                <span class="font-val-badge" id="fontSizeValue">100%</span>
+            </div>
+        </div>
+
+        <div class="setting-group">
+            <span class="setting-label">主題顏色 (Theme Color):</span>
+            <div class="theme-grid">
+                <button class="theme-btn active" id="theme-original" onclick="applyTheme('original')">預設 (Original)</button>
+                <button class="theme-btn" id="theme-dark-red" onclick="applyTheme('dark-red')">深紅 (Dark Red)</button>
+                <button class="theme-btn" id="theme-light-yellow" onclick="applyTheme('light-yellow')">淺黃 (Light Yellow)</button>
+                <button class="theme-btn" id="theme-light-blue" onclick="applyTheme('light-blue')">淺藍 (Light Blue)</button>
+            </div>
+        </div>
+
+        <div class="modal-buttons">
+            <button class="modal-btn modal-btn-reset" onclick="resetUserSettings()">重置 (Reset)</button>
+            <button class="modal-btn modal-btn-cancel" onclick="closeSettingsModal()">關閉 (Close)</button>
         </div>
     </div>
 </div>
@@ -732,11 +1027,30 @@
     let currentSearchTerm = "";
     let isEditing = false;
 
+    // Local User Settings & Audio State
+    let userScale = parseFloat(localStorage.getItem("3j_font_scale")) || 1;
+    let userTheme = localStorage.getItem("3j_theme") || "original";
+    let userVolume = localStorage.getItem("3j_volume") !== null ? parseFloat(localStorage.getItem("3j_volume")) : 0.5;
+    let isMusicPlaying = false;
+    let hasInteracted = false;
+
     window.addEventListener("DOMContentLoaded", () => {
+        loadUserSettings();
+        initAudioPlayer();
         checkDisclaimerConsent();
         initSubjectFilterButtons();
         updateClock();
         
+        // Auto-play music on first user interaction with page
+        const startAudioOnInteraction = () => {
+            if (!hasInteracted) {
+                hasInteracted = true;
+                playMusic();
+            }
+        };
+        window.addEventListener('click', startAudioOnInteraction, { once: true });
+        window.addEventListener('keydown', startAudioOnInteraction, { once: true });
+
         const waitForNeon = setInterval(() => {
             if (window.sql) {
                 clearInterval(waitForNeon);
@@ -751,6 +1065,108 @@
         }, 1000);
     });
 
+    /* --- Audio Player Functionality --- */
+    function initAudioPlayer() {
+        const audio = document.getElementById("bgAudio");
+        const slider = document.getElementById("volumeSlider");
+        audio.volume = userVolume;
+        slider.value = userVolume;
+    }
+
+    function playMusic() {
+        const audio = document.getElementById("bgAudio");
+        audio.play().then(() => {
+            isMusicPlaying = true;
+            updateMusicUI();
+        }).catch(err => console.log("Autoplay waiting for interaction:", err));
+    }
+
+    function pauseMusic() {
+        const audio = document.getElementById("bgAudio");
+        audio.pause();
+        isMusicPlaying = false;
+        updateMusicUI();
+    }
+
+    function toggleMusic() {
+        hasInteracted = true;
+        if (isMusicPlaying) {
+            pauseMusic();
+        } else {
+            playMusic();
+        }
+    }
+
+    function changeVolume(val) {
+        userVolume = parseFloat(val);
+        const audio = document.getElementById("bgAudio");
+        audio.volume = userVolume;
+        localStorage.setItem("3j_volume", userVolume);
+    }
+
+    function updateMusicUI() {
+        const disk = document.getElementById("diskIcon");
+        const btn = document.getElementById("btnMusicToggle");
+        if (isMusicPlaying) {
+            disk.classList.add("spinning");
+            btn.textContent = "❚❚";
+        } else {
+            disk.classList.remove("spinning");
+            btn.textContent = "▶";
+        }
+    }
+
+    /* --- Device Preferences / Settings Management --- */
+    function loadUserSettings() {
+        applyFontSize(userScale);
+        applyTheme(userTheme);
+    }
+
+    function changeFontSize(val) {
+        userScale = parseFloat(val);
+        applyFontSize(userScale);
+        localStorage.setItem("3j_font_scale", userScale);
+    }
+
+    function applyFontSize(scale) {
+        document.documentElement.style.setProperty('--font-scale', scale);
+        document.getElementById("fontSizeSlider").value = scale;
+        document.getElementById("fontSizeValue").textContent = Math.round(scale * 100) + "%";
+    }
+
+    function applyTheme(themeName) {
+        userTheme = themeName;
+        document.body.classList.remove('theme-dark-red', 'theme-light-yellow', 'theme-light-blue');
+        
+        if (themeName !== 'original') {
+            document.body.classList.add(`theme-${themeName}`);
+        }
+
+        document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
+        const activeBtn = document.getElementById(`theme-${themeName}`);
+        if (activeBtn) activeBtn.classList.add('active');
+
+        localStorage.setItem("3j_theme", themeName);
+    }
+
+    function resetUserSettings() {
+        userScale = 1;
+        userTheme = 'original';
+        userVolume = 0.5;
+        applyFontSize(1);
+        applyTheme('original');
+        changeVolume(0.5);
+    }
+
+    function openSettingsModal() {
+        document.getElementById("settingsModal").classList.add("active");
+    }
+
+    function closeSettingsModal() {
+        document.getElementById("settingsModal").classList.remove("active");
+    }
+
+    /* --- Core Neon & Table Functionality --- */
     async function fetchDataFromNeon() {
         if (!window.sql) return;
         try {
@@ -879,7 +1295,7 @@
     }
 
     function checkDisclaimerConsent() {
-        document.getElementById("termsModal").style.display = "flex";
+        document.getElementById("termsModal").classList.add("active");
         document.getElementById("agreeCheckbox").checked = false;
         document.getElementById("btnEnterApp").disabled = true;
     }
@@ -890,7 +1306,11 @@
     }
 
     function acceptTermsAndEnter() {
-        document.getElementById("termsModal").style.display = "none";
+        document.getElementById("termsModal").classList.remove("active");
+        if (!hasInteracted) {
+            hasInteracted = true;
+            playMusic();
+        }
     }
 
     function renderLastUpdateTime() {
@@ -1022,12 +1442,12 @@
     function openPasswordModal() {
         document.getElementById("pwdInput").value = "";
         document.getElementById("modalError").style.display = "none";
-        document.getElementById("passwordModal").style.display = "flex";
+        document.getElementById("passwordModal").classList.add("active");
         setTimeout(() => document.getElementById("pwdInput").focus(), 100);
     }
 
     function closePasswordModal() {
-        document.getElementById("passwordModal").style.display = "none";
+        document.getElementById("passwordModal").classList.remove("active");
     }
 
     function verifyPassword() {
