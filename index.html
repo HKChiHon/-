@@ -142,13 +142,18 @@
             white-space: nowrap;
         }
 
+        /* Unified Height Bar Styling across Clock, Settings, Player, and Last Update */
         .clock-display {
             font-family: var(--mtr-font);
-            font-size: calc(18px * var(--font-scale));
+            font-size: calc(15px * var(--font-scale));
             font-weight: 300;
             color: var(--text-main);
             letter-spacing: 1px;
-            padding: 4px 12px;
+            padding: 0 12px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             background: rgba(255, 255, 255, 0.08);
             border-radius: 6px;
             border: 1px solid var(--border-color);
@@ -159,7 +164,11 @@
             background: rgba(255, 255, 255, 0.12);
             color: var(--text-main);
             border: 1px solid var(--border-color);
-            padding: 5px 12px;
+            padding: 0 14px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             border-radius: 6px;
             font-size: calc(14px * var(--font-scale));
             font-family: var(--mtr-font);
@@ -173,14 +182,15 @@
             transform: scale(1.03);
         }
 
-        /* Expanded Music Player Styling */
+        /* Expanded Music Player Styling with Matching 36px Height */
         .music-player-container {
             display: flex;
             align-items: center;
             gap: 8px;
             background: rgba(255, 255, 255, 0.08);
             border: 1px solid var(--border-color);
-            padding: 4px 10px;
+            padding: 0 10px;
+            height: 36px;
             border-radius: 6px;
             white-space: nowrap;
             max-width: 380px;
@@ -206,17 +216,24 @@
             white-space: nowrap;
             background: rgba(0, 0, 0, 0.2);
             border-radius: 4px;
-            padding: 3px 0;
+            padding: 2px 0;
             border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
         }
 
         .music-marquee-text {
             display: inline-block;
             padding-left: 100%;
             animation: musicMarquee 12s linear infinite;
+            animation-play-state: paused; /* Controlled via Javascript */
             font-size: calc(12px * var(--font-scale));
             color: var(--subtext-color);
             font-family: var(--mtr-font);
+        }
+
+        .music-marquee-text.playing {
+            animation-play-state: running;
         }
 
         @keyframes musicMarquee {
@@ -229,11 +246,15 @@
             color: var(--text-main);
             border: 1px solid var(--border-color);
             border-radius: 4px;
-            padding: 3px 8px;
+            padding: 2px 8px;
             font-size: calc(13px * var(--font-scale));
             font-family: var(--mtr-font);
             cursor: pointer;
             transition: all 0.2s ease;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .btn-music-toggle:hover {
@@ -262,7 +283,11 @@
             font-size: calc(14px * var(--font-scale));
             color: var(--subtext-color);
             background: rgba(0, 0, 0, 0.15);
-            padding: 6px 12px;
+            padding: 0 12px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             border-radius: 6px;
             border: 1px solid var(--border-color);
             white-space: nowrap;
@@ -272,7 +297,8 @@
             background-color: #e60000;
             color: #ffffff;
             border: none;
-            padding: 8px 18px;
+            padding: 0 18px;
+            height: 36px;
             border-radius: 6px;
             font-size: calc(15px * var(--font-scale));
             font-weight: 400;
@@ -282,6 +308,7 @@
             box-shadow: 0 2px 8px rgba(230, 0, 0, 0.4);
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 6px;
             white-space: nowrap;
         }
@@ -878,11 +905,11 @@
             <div class="clock-display" id="clockDisplay">--/--/---- --:--:--</div>
             <button class="btn-settings" onclick="openSettingsModal()">⚙ 設定</button>
             
-            <!-- Lengthened Music Player Interface -->
+            <!-- Music Player Interface -->
             <div class="music-player-container">
                 <span class="disk-icon" id="diskIcon">💽</span>
                 <div class="music-marquee-box">
-                    <div class="music-marquee-text">NOW PLAYING: All Through The Night (Piano)</div>
+                    <div class="music-marquee-text" id="musicMarqueeText">NOW PLAYING: All Through The Night (Piano)</div>
                 </div>
                 <button class="btn-music-toggle" id="btnMusicToggle" onclick="toggleMusic()">▶</button>
                 <div class="volume-container">
@@ -1032,7 +1059,6 @@
     let userTheme = localStorage.getItem("3j_theme") || "original";
     let userVolume = localStorage.getItem("3j_volume") !== null ? parseFloat(localStorage.getItem("3j_volume")) : 0.5;
     let isMusicPlaying = false;
-    let hasInteracted = false;
 
     window.addEventListener("DOMContentLoaded", () => {
         loadUserSettings();
@@ -1040,16 +1066,6 @@
         checkDisclaimerConsent();
         initSubjectFilterButtons();
         updateClock();
-        
-        // Auto-play music on first user interaction with page
-        const startAudioOnInteraction = () => {
-            if (!hasInteracted) {
-                hasInteracted = true;
-                playMusic();
-            }
-        };
-        window.addEventListener('click', startAudioOnInteraction, { once: true });
-        window.addEventListener('keydown', startAudioOnInteraction, { once: true });
 
         const waitForNeon = setInterval(() => {
             if (window.sql) {
@@ -1071,6 +1087,7 @@
         const slider = document.getElementById("volumeSlider");
         audio.volume = userVolume;
         slider.value = userVolume;
+        updateMusicUI();
     }
 
     function playMusic() {
@@ -1078,7 +1095,7 @@
         audio.play().then(() => {
             isMusicPlaying = true;
             updateMusicUI();
-        }).catch(err => console.log("Autoplay waiting for interaction:", err));
+        }).catch(err => console.log("Playback error:", err));
     }
 
     function pauseMusic() {
@@ -1089,7 +1106,6 @@
     }
 
     function toggleMusic() {
-        hasInteracted = true;
         if (isMusicPlaying) {
             pauseMusic();
         } else {
@@ -1107,12 +1123,16 @@
     function updateMusicUI() {
         const disk = document.getElementById("diskIcon");
         const btn = document.getElementById("btnMusicToggle");
+        const marqueeTextElem = document.getElementById("musicMarqueeText");
+
         if (isMusicPlaying) {
             disk.classList.add("spinning");
             btn.textContent = "❚❚";
+            marqueeTextElem.classList.add("playing");
         } else {
             disk.classList.remove("spinning");
             btn.textContent = "▶";
+            marqueeTextElem.classList.remove("playing");
         }
     }
 
@@ -1307,10 +1327,6 @@
 
     function acceptTermsAndEnter() {
         document.getElementById("termsModal").classList.remove("active");
-        if (!hasInteracted) {
-            hasInteracted = true;
-            playMusic();
-        }
     }
 
     function renderLastUpdateTime() {
