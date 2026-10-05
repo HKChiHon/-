@@ -1,0 +1,1571 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3J功課大屏 (Neon Connected)</title>
+    <style>
+        @font-family {
+            font-family: 'MTR Sung';
+            src: local('MTR Sung'), local('MTR-Sung'), local('MTRFont'), local('港鐵宋體'), local('MingLiU');
+        }
+
+        :root {
+            --mtr-font: 'MTR Sung', 'MTRFont', '港鐵宋體', 'MingLiU', 'PMingLiU', 'Microsoft JhengHei', sans-serif, serif;
+            
+            /* Dynamic Theme Variables (Default: Original) */
+            --bg-gradient: linear-gradient(135deg, #061527 0%, #0a2540 50%, #0d1b2a 100%);
+            --panel-bg: rgba(13, 40, 71, 0.85);
+            --border-color: rgba(30, 82, 136, 0.6);
+            --header-bg: #092e4e;
+            --row-even: rgba(10, 35, 66, 0.85);
+            --row-odd: rgba(12, 43, 80, 0.85);
+            --text-main: #ffffff;
+            --subtext-color: #8ab4f8;
+            --table-id-color: #b3d9ff;
+            --table-date-color: #d0e4ff;
+            
+            --status-upcoming: #ffff00;
+            --status-expired: #ff4d4d;
+            --status-pending: #00ff66;
+            --status-late: #c05cff;
+            --status-unissued: #00e5ff;
+
+            /* Base Font Scale multiplier controlled by Settings */
+            --font-scale: 1;
+        }
+
+        /* Theme Overrides with Accessible Text Contrast */
+        body.theme-dark-red {
+            --bg-gradient: linear-gradient(135deg, #1f0505 0%, #3a0a0a 50%, #290808 100%);
+            --panel-bg: rgba(55, 15, 15, 0.85);
+            --border-color: rgba(140, 40, 40, 0.6);
+            --header-bg: #4a1010;
+            --row-even: rgba(50, 15, 15, 0.85);
+            --row-odd: rgba(60, 20, 20, 0.85);
+            --text-main: #ffffff;
+            --subtext-color: #ffb3b3;
+            --table-id-color: #ffd6d6;
+            --table-date-color: #ffe6e6;
+        }
+
+        body.theme-light-yellow {
+            --bg-gradient: linear-gradient(135deg, #fdfbf7 0%, #f5eedc 50%, #ebe3cf 100%);
+            --panel-bg: rgba(255, 252, 242, 0.92);
+            --border-color: rgba(180, 140, 80, 0.5);
+            --header-bg: #e6d3a3;
+            --row-even: rgba(250, 245, 230, 0.95);
+            --row-odd: rgba(242, 235, 215, 0.95);
+            --text-main: #221a0f;
+            --subtext-color: #594014;
+            --table-id-color: #422d0a;
+            --table-date-color: #332105;
+        }
+
+        body.theme-light-blue {
+            --bg-gradient: linear-gradient(135deg, #f0f7ff 0%, #dbeafe 50%, #c1e0ff 100%);
+            --panel-bg: rgba(240, 246, 255, 0.92);
+            --border-color: rgba(125, 175, 230, 0.7);
+            --header-bg: #bfdbfe;
+            --row-even: rgba(239, 246, 255, 0.95);
+            --row-odd: rgba(219, 234, 254, 0.95);
+            --text-main: #0f172a;
+            --subtext-color: #1e40af;
+            --table-id-color: #1e3a8a;
+            --table-date-color: #172554;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            width: 100%;
+            min-height: 100vh;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            font-family: var(--mtr-font);
+            font-weight: 300;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+            transition: background 0.4s ease, color 0.4s ease;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: 100vh;
+            padding: 12px 16px;
+            gap: 12px;
+        }
+
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 12px 20px;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .header-title-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .header-action-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .app-title {
+            font-size: calc(24px * var(--font-scale));
+            font-weight: 400;
+            letter-spacing: 2px;
+            color: var(--text-main);
+            font-family: var(--mtr-font);
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+            white-space: nowrap;
+        }
+
+        /* Unified Height Bar Styling across Clock, Settings, Player, and Last Update */
+        .clock-display {
+            font-family: var(--mtr-font);
+            font-size: calc(15px * var(--font-scale));
+            font-weight: 300;
+            color: var(--text-main);
+            letter-spacing: 1px;
+            padding: 0 12px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        .btn-settings {
+            background: rgba(255, 255, 255, 0.12);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 0 14px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            font-size: calc(14px * var(--font-scale));
+            font-family: var(--mtr-font);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn-settings:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.03);
+        }
+
+        /* Expanded Music Player Styling with Matching 36px Height */
+        .music-player-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-color);
+            padding: 0 10px;
+            height: 36px;
+            border-radius: 6px;
+            white-space: nowrap;
+            max-width: 380px;
+        }
+
+        .disk-icon {
+            display: inline-block;
+            font-size: calc(16px * var(--font-scale));
+            transition: transform 0.2s linear;
+        }
+
+        .disk-icon.spinning {
+            animation: spin 3s linear infinite;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        .music-marquee-box {
+            width: 140px;
+            overflow: hidden;
+            white-space: nowrap;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            padding: 2px 0;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+        }
+
+        .music-marquee-text {
+            display: inline-block;
+            padding-left: 100%;
+            animation: musicMarquee 12s linear infinite;
+            animation-play-state: paused; /* Controlled via Javascript */
+            font-size: calc(12px * var(--font-scale));
+            color: var(--subtext-color);
+            font-family: var(--mtr-font);
+        }
+
+        .music-marquee-text.playing {
+            animation-play-state: running;
+        }
+
+        @keyframes musicMarquee {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-100%, 0); }
+        }
+
+        .btn-music-toggle {
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: calc(13px * var(--font-scale));
+            font-family: var(--mtr-font);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-music-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .volume-icon {
+            font-size: calc(12px * var(--font-scale));
+            color: var(--subtext-color);
+        }
+
+        .volume-slider {
+            width: 50px;
+            accent-color: #0080ff;
+            cursor: pointer;
+        }
+
+        .last-update-display {
+            font-family: var(--mtr-font);
+            font-size: calc(14px * var(--font-scale));
+            color: var(--subtext-color);
+            background: rgba(0, 0, 0, 0.15);
+            padding: 0 12px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        .btn-edit-toggle {
+            background-color: #e60000;
+            color: #ffffff;
+            border: none;
+            padding: 0 18px;
+            height: 36px;
+            border-radius: 6px;
+            font-size: calc(15px * var(--font-scale));
+            font-weight: 400;
+            font-family: var(--mtr-font);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(230, 0, 0, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .btn-edit-toggle:hover {
+            background-color: #ff1a1a;
+            transform: translateY(-1px);
+        }
+
+        .btn-edit-toggle.editing {
+            background-color: #00b33c;
+            box-shadow: 0 2px 8px rgba(0, 179, 60, 0.4);
+        }
+
+        .filter-section {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-label {
+            font-size: calc(14px * var(--font-scale));
+            font-weight: 400;
+            color: var(--subtext-color);
+            min-width: 70px;
+            white-space: nowrap;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .filter-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 5px 11px;
+            border-radius: 4px;
+            font-size: calc(13px * var(--font-scale));
+            font-weight: 300;
+            font-family: var(--mtr-font);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .filter-btn:hover {
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        .filter-btn.active {
+            background: #1e62a8;
+            border-color: #4da6ff;
+            color: #ffffff;
+            font-weight: 400;
+            box-shadow: 0 0 8px rgba(30, 98, 168, 0.6);
+        }
+
+        .filter-btn[data-status="即將截止"].active { background: #808000; border-color: #ffff00; color: #ffffaa; }
+        .filter-btn[data-status="已截止"].active { background: #800000; border-color: #ff4d4d; color: #ffcccc; }
+        .filter-btn[data-status="待截止"].active { background: #006622; border-color: #00ff66; color: #ccffdd; }
+        .filter-btn[data-status="晚點"].active { background: #4d0080; border-color: #c05cff; color: #f0ccff; }
+        .filter-btn[data-status="待發放"].active { background: #006680; border-color: #00e5ff; color: #ccf8ff; }
+
+        .btn-reset {
+            background: rgba(42, 63, 95, 0.8);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            margin-left: 6px;
+        }
+
+        .search-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .search-input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.15);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 8px 12px;
+            color: var(--text-main);
+            font-size: calc(14px * var(--font-scale));
+            font-family: var(--mtr-font);
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: #00d4ff;
+            box-shadow: 0 0 6px rgba(0, 212, 255, 0.3);
+        }
+
+        .marquee-container {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 204, 0, 0.4);
+            border-radius: 4px;
+            overflow: hidden;
+            white-space: nowrap;
+            padding: 6px 0;
+        }
+
+        .marquee-content {
+            display: inline-block;
+            padding-left: 100%;
+            animation: marquee 18s linear infinite;
+            color: #d9a300;
+            font-size: calc(14px * var(--font-scale));
+            letter-spacing: 1px;
+            font-family: var(--mtr-font);
+            font-weight: 400;
+        }
+
+        body.theme-original .marquee-content,
+        body.theme-dark-red .marquee-content {
+            color: #ffcc00;
+        }
+
+        @keyframes marquee {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-100%, 0); }
+        }
+
+        .marquee-edit-box {
+            display: none;
+            width: 100%;
+        }
+
+        .marquee-edit-input {
+            width: 100%;
+            background: rgba(5, 18, 36, 0.9);
+            border: 1px solid #ffcc00;
+            border-radius: 4px;
+            padding: 8px 12px;
+            color: #ffcc00;
+            font-size: calc(14px * var(--font-scale));
+            font-family: var(--mtr-font);
+            outline: none;
+        }
+
+        .editing-mode .marquee-edit-box {
+            display: block;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .stat-pill {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: calc(13px * var(--font-scale));
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-main);
+        }
+
+        .table-area {
+            flex: 1;
+            overflow-x: auto;
+            overflow-y: auto;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            max-height: 60vh;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: calc(15px * var(--font-scale));
+            min-width: 650px;
+        }
+
+        thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: var(--header-bg);
+        }
+
+        th {
+            padding: 12px 16px;
+            font-weight: 400;
+            color: var(--text-main);
+            text-align: left;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        th:nth-child(1) { text-align: center; width: 110px; }
+        th:nth-child(2) { text-align: left; }
+        th:nth-child(3) { text-align: center; width: 160px; }
+        th:nth-child(4) { text-align: center; width: 130px; }
+        th:nth-child(5) { text-align: center; width: 130px; }
+        .th-actions { text-align: center; width: 80px; display: none; }
+
+        tbody tr {
+            height: 42px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        tbody tr:nth-child(even) { background-color: var(--row-even); }
+        tbody tr:nth-child(odd) { background-color: var(--row-odd); }
+
+        tbody tr:hover { background-color: rgba(255, 255, 255, 0.1); }
+
+        td {
+            padding: 8px 16px;
+            vertical-align: middle;
+        }
+
+        td:nth-child(1) { text-align: center; color: var(--table-id-color); font-weight: 400; }
+        td:nth-child(2) { text-align: left; color: var(--text-main); }
+        td:nth-child(3) { text-align: center; color: var(--text-main); }
+        td:nth-child(4) { text-align: center; color: var(--table-date-color); font-weight: 400; }
+        td:nth-child(5) { text-align: center; font-weight: 400; }
+        .td-actions { text-align: center; display: none; }
+
+        /* Status Colors mapping across themes */
+        .status-即將截止 { color: var(--status-upcoming); }
+        .status-已截止 { color: var(--status-expired); }
+        .status-待截止 { color: var(--status-pending); }
+        .status-晚點 { color: var(--status-late); }
+        .status-待發放 { color: var(--status-unissued); }
+
+        /* Dark background status colors */
+        body.theme-original .status-即將截止, body.theme-dark-red .status-即將截止 { color: #ffff00; }
+        body.theme-original .status-已截止, body.theme-dark-red .status-已截止 { color: #ff4d4d; }
+        body.theme-original .status-待截止, body.theme-dark-red .status-待截止 { color: #00ff66; }
+        body.theme-original .status-晚點, body.theme-dark-red .status-晚點 { color: #c05cff; }
+        body.theme-original .status-待發放, body.theme-dark-red .status-待發放 { color: #00e5ff; }
+
+        /* Light background status colors */
+        body.theme-light-yellow .status-即將截止, body.theme-light-blue .status-即將截止 { color: #b37400; font-weight: 600; }
+        body.theme-light-yellow .status-已截止, body.theme-light-blue .status-已截止 { color: #cc0000; font-weight: 600; }
+        body.theme-light-yellow .status-待截止, body.theme-light-blue .status-待截止 { color: #00802b; font-weight: 600; }
+        body.theme-light-yellow .status-晚點, body.theme-light-blue .status-晚點 { color: #7000cc; font-weight: 600; }
+        body.theme-light-yellow .status-待發放, body.theme-light-blue .status-待發放 { color: #007399; font-weight: 600; }
+
+        .editable-input, .editable-select {
+            background: rgba(5, 18, 36, 0.9);
+            border: 1px solid #4da6ff;
+            color: #ffffff;
+            padding: 5px 8px;
+            border-radius: 4px;
+            font-family: var(--mtr-font);
+            font-size: calc(14px * var(--font-scale));
+            width: 100%;
+            outline: none;
+        }
+
+        .editable-select option {
+            background: #092e4e;
+            color: #ffffff;
+        }
+
+        .btn-add-row {
+            background: #0080ff;
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: var(--mtr-font);
+            font-size: calc(14px * var(--font-scale));
+            margin: 10px 16px;
+            display: none;
+            transition: background 0.2s ease;
+        }
+
+        .btn-add-row:hover { background: #3399ff; }
+
+        .btn-delete {
+            background: #cc0000;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: calc(12px * var(--font-scale));
+        }
+
+        .btn-delete:hover { background: #ff1a1a; }
+
+        .editing-mode .th-actions,
+        .editing-mode .td-actions { display: table-cell !important; }
+
+        .editing-mode .btn-add-row { display: inline-block !important; }
+
+        /* Smooth Animation Overlay Base */
+        .modal-overlay, .terms-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.active, .terms-modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 24px;
+            width: 100%;
+            max-width: 380px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            transform: scale(0.85);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-overlay.active .modal-card, .terms-modal-overlay.active .terms-card {
+            transform: scale(1);
+        }
+
+        .terms-card {
+            background: #092e4e;
+            border: 2px solid #ffcc00;
+            border-radius: 12px;
+            padding: 28px 24px;
+            max-width: 480px;
+            width: 100%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            text-align: center;
+            transform: scale(0.85);
+            transition: transform 0.3s ease;
+        }
+
+        .terms-header {
+            font-size: calc(20px * var(--font-scale));
+            color: #ffcc00;
+            font-weight: 400;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border-bottom: 1px solid rgba(255, 204, 0, 0.3);
+            padding-bottom: 12px;
+        }
+
+        .terms-content-box {
+            background: rgba(5, 18, 36, 0.8);
+            border: 1px solid rgba(255, 204, 0, 0.3);
+            border-radius: 6px;
+            padding: 16px;
+            font-size: calc(16px * var(--font-scale));
+            line-height: 1.6;
+            color: #ffffff;
+            text-align: left;
+        }
+
+        .terms-checkbox-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: calc(15px * var(--font-scale));
+            color: #d1e4ff;
+            cursor: pointer;
+            user-select: none;
+            padding: 4px 0;
+        }
+
+        .terms-checkbox-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #0080ff;
+        }
+
+        .terms-btn-enter {
+            background: #0080ff;
+            color: #ffffff;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: calc(16px * var(--font-scale));
+            font-family: var(--mtr-font);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .terms-btn-enter:disabled {
+            background: #2a415a;
+            color: #88a3be;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        /* Settings Modal Styling */
+        .settings-header {
+            font-size: calc(18px * var(--font-scale));
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            text-align: left;
+        }
+
+        .setting-label {
+            font-size: calc(14px * var(--font-scale));
+            color: var(--subtext-color);
+        }
+
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .theme-btn {
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-main);
+            font-family: var(--mtr-font);
+            font-size: calc(13px * var(--font-scale));
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .theme-btn:hover, .theme-btn.active {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.2);
+            font-weight: 400;
+        }
+
+        .font-slider-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .font-slider {
+            flex: 1;
+            accent-color: #0080ff;
+            cursor: pointer;
+        }
+
+        .font-val-badge {
+            font-size: calc(13px * var(--font-scale));
+            color: var(--text-main);
+            min-width: 40px;
+            text-align: right;
+        }
+
+        .modal-title { font-size: calc(18px * var(--font-scale)); color: var(--text-main); text-align: center; }
+
+        .modal-input {
+            width: 100%;
+            background: rgba(5, 18, 36, 0.9);
+            border: 1px solid #4da6ff;
+            border-radius: 4px;
+            padding: 8px 12px;
+            color: #ffffff;
+            font-size: calc(15px * var(--font-scale));
+            outline: none;
+            text-align: center;
+        }
+
+        .modal-error { color: #ff4d4d; font-size: calc(13px * var(--font-scale)); display: none; text-align: center; }
+
+        .modal-buttons { display: flex; gap: 10px; margin-top: 6px; }
+
+        .modal-btn {
+            flex: 1;
+            padding: 8px 0;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-family: var(--mtr-font);
+            font-size: calc(14px * var(--font-scale));
+            transition: opacity 0.2s;
+        }
+
+        .modal-btn:hover { opacity: 0.9; }
+
+        .modal-btn-confirm { background: #0080ff; color: #ffffff; }
+        .modal-btn-cancel { background: #4a6fa5; color: #ffffff; }
+        .modal-btn-reset { background: #b33939; color: #ffffff; }
+
+        .app-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: calc(13px * var(--font-scale));
+            color: var(--subtext-color);
+            margin-top: auto;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 35px;
+            color: var(--subtext-color);
+            font-size: calc(15px * var(--font-scale));
+        }
+    </style>
+
+    <!-- Neon Serverless HTTP SDK -->
+    <script type="module">
+        import { neon } from "https://esm.sh/@neondatabase/serverless";
+        
+        // Cleaned Connection String (Removed channel_binding for browser compatibility)
+        const NEON_DATABASE_URL = "postgresql://neondb_owner:npg_6JoszeNObk8p@ep-calm-darkness-b5lh4obr-pooler.c-7.us-east-2.aws.neon.tech/neondb?sslmode=require";
+        window.sql = neon(NEON_DATABASE_URL);
+    </script>
+</head>
+<body>
+
+<!-- Local WAV Audio File -->
+<audio id="bgAudio" loop preload="auto">
+    <source src="All Through The Night (Piano).wav" type="audio/wav">
+</audio>
+
+<div class="terms-modal-overlay" id="termsModal">
+    <div class="terms-card">
+        <div class="terms-header">
+            <span>⚠</span> 系統提示與免責聲明
+        </div>
+        <div class="terms-content-box">
+            此表只供參考，功課的繳交時間以科任老師的宣佈為準則！
+        </div>
+        <label class="terms-checkbox-label">
+            <input type="checkbox" id="agreeCheckbox" onchange="toggleAgreeButton()">
+            <span>本人已閱讀並同意以上條款及細則</span>
+        </label>
+        <button class="terms-btn-enter" id="btnEnterApp" disabled onclick="acceptTermsAndEnter()">進入網站</button>
+    </div>
+</div>
+
+<div class="app-container" id="app">
+    <header class="app-header">
+        <div class="header-title-group">
+            <h1 class="app-title">3J功課大屏</h1>
+            <div class="clock-display" id="clockDisplay">--/--/---- --:--:--</div>
+            <button class="btn-settings" onclick="openSettingsModal()">⚙ 設定</button>
+            
+            <!-- Music Player Interface -->
+            <div class="music-player-container">
+                <span class="disk-icon" id="diskIcon">💽</span>
+                <div class="music-marquee-box">
+                    <div class="music-marquee-text" id="musicMarqueeText">NOW PLAYING: All Through The Night (Piano)</div>
+                </div>
+                <button class="btn-music-toggle" id="btnMusicToggle" onclick="toggleMusic()">▶</button>
+                <div class="volume-container">
+                    <span class="volume-icon">🔊</span>
+                    <input type="range" id="volumeSlider" class="volume-slider" min="0" max="1" step="0.05" value="0.5" oninput="changeVolume(this.value)">
+                </div>
+            </div>
+        </div>
+
+        <div class="header-action-group">
+            <div class="last-update-display" id="lastUpdateDisplay">最後更新：載入中...</div>
+            <button class="btn-edit-toggle" id="btnEditToggle" onclick="handleEditClick()">
+                ✏ 編輯
+            </button>
+        </div>
+    </header>
+
+    <section class="filter-section">
+        <div class="filter-row">
+            <span class="filter-label">狀態篩選：</span>
+            <div class="btn-group" id="statusFilterGroup">
+                <button class="filter-btn active" data-status="ALL" onclick="setStatusFilter('ALL')">全部</button>
+                <button class="filter-btn" data-status="即將截止" onclick="setStatusFilter('即將截止')">即將截止</button>
+                <button class="filter-btn" data-status="已截止" onclick="setStatusFilter('已截止')">已截止</button>
+                <button class="filter-btn" data-status="待截止" onclick="setStatusFilter('待截止')">待截止</button>
+                <button class="filter-btn" data-status="晚點" onclick="setStatusFilter('晚點')">晚點</button>
+                <button class="filter-btn" data-status="待發放" onclick="setStatusFilter('待發放')">待發放</button>
+            </div>
+            <button class="filter-btn btn-reset" onclick="resetAllFilters()">重置篩選</button>
+        </div>
+
+        <div class="filter-row">
+            <span class="filter-label">科目篩選：</span>
+            <div class="btn-group" id="subjectFilterGroup"></div>
+        </div>
+
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜尋編號、課業名稱或科目..." oninput="onSearchInput(this.value)">
+        </div>
+
+        <div class="marquee-container">
+            <div class="marquee-content" id="marqueeDisplay">📢 歡迎使用 3J 功課大屏！請準時交功課，勤奮學習！</div>
+        </div>
+        <div class="marquee-edit-box">
+            <input type="text" id="marqueeInput" class="marquee-edit-input" placeholder="✏️ 編輯跑馬燈滾動文字..." oninput="updateMarqueeText(this.value)">
+        </div>
+    </section>
+
+    <div class="stats-bar">
+        <div class="stat-pill"><span style="color: var(--status-upcoming)">● 即將截止:</span> <span class="stat-count" id="countUpcoming" style="color: var(--status-upcoming)">0</span></div>
+        <div class="stat-pill"><span style="color: var(--status-expired)">● 已截止:</span> <span class="stat-count" id="countExpired" style="color: var(--status-expired)">0</span></div>
+        <div class="stat-pill"><span style="color: var(--status-pending)">● 待截止:</span> <span class="stat-count" id="countPending" style="color: var(--status-pending)">0</span></div>
+        <div class="stat-pill"><span style="color: var(--status-late)">● 晚點:</span> <span class="stat-count" id="countLate" style="color: var(--status-late)">0</span></div>
+        <div class="stat-pill"><span style="color: var(--status-unissued)">● 待發放:</span> <span class="stat-count" id="countUnissued" style="color: var(--status-unissued)">0</span></div>
+    </div>
+
+    <main class="table-area" id="tableArea">
+        <button class="btn-add-row" onclick="addNewRow()">＋ 新增功課</button>
+        <table>
+            <thead>
+                <tr>
+                    <th>編號</th>
+                    <th>課業</th>
+                    <th>科目</th>
+                    <th>截止日期</th>
+                    <th>當前狀態</th>
+                    <th class="th-actions">操作</th>
+                </tr>
+            </thead>
+            <tbody id="homeworkTableBody"></tbody>
+        </table>
+        <div id="emptyMessage" class="empty-state" style="display: none;">沒有符合條件的功課記錄</div>
+    </main>
+
+    <footer class="app-footer">
+        <div id="recordCounter">顯示 0 項 / 共 0 項</div>
+    </footer>
+</div>
+
+<!-- Password Modal -->
+<div class="modal-overlay" id="passwordModal">
+    <div class="modal-card">
+        <div class="modal-title">🔒 請輸入編輯密碼</div>
+        <input type="password" id="pwdInput" class="modal-input" placeholder="密碼" onkeydown="if(event.key==='Enter') verifyPassword()">
+        <div class="modal-error" id="modalError">密碼錯誤，請重新輸入！</div>
+        <div class="modal-buttons">
+            <button class="modal-btn modal-btn-cancel" onclick="closePasswordModal()">取消</button>
+            <button class="modal-btn modal-btn-confirm" onclick="verifyPassword()">確認</button>
+        </div>
+    </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal">
+    <div class="modal-card">
+        <div class="settings-header">
+            <span>⚙ 頁面設定 (Settings)</span>
+        </div>
+        
+        <div class="setting-group">
+            <span class="setting-label">文字大小 (Font Size):</span>
+            <div class="font-slider-container">
+                <input type="range" min="0.8" max="1.3" step="0.05" value="1" id="fontSizeSlider" class="font-slider" oninput="changeFontSize(this.value)">
+                <span class="font-val-badge" id="fontSizeValue">100%</span>
+            </div>
+        </div>
+
+        <div class="setting-group">
+            <span class="setting-label">主題顏色 (Theme Color):</span>
+            <div class="theme-grid">
+                <button class="theme-btn active" id="theme-original" onclick="applyTheme('original')">預設 (Original)</button>
+                <button class="theme-btn" id="theme-dark-red" onclick="applyTheme('dark-red')">深紅 (Dark Red)</button>
+                <button class="theme-btn" id="theme-light-yellow" onclick="applyTheme('light-yellow')">淺黃 (Light Yellow)</button>
+                <button class="theme-btn" id="theme-light-blue" onclick="applyTheme('light-blue')">淺藍 (Light Blue)</button>
+            </div>
+        </div>
+
+        <div class="modal-buttons">
+            <button class="modal-btn modal-btn-reset" onclick="resetUserSettings()">重置 (Reset)</button>
+            <button class="modal-btn modal-btn-cancel" onclick="closeSettingsModal()">關閉 (Close)</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const EDIT_PASSWORD = "henry021412";
+
+    const SUBJECT_LIST = [
+        "全部", "中國語文", "English Language", "Mathematics", "Chemistry", 
+        "Geography", "History", "中國歷史", "公民、經濟及社會", "倫理與宗教", 
+        "Computer Literacy", "Visual Arts", "Physical Education", "Physics", 
+        "Biology", "Music", "普通話"
+    ];
+
+    const STATUS_LIST = ["即將截止", "已截止", "待截止", "晚點", "待發放"];
+
+    let homeworkList = [];
+    let marqueeText = "📢 歡迎使用 3J 功課大屏！請準時交功課，勤奮學習！";
+    let lastUpdateTime = "";
+    let currentStatusFilter = "ALL";
+    let currentSubjectFilter = "ALL";
+    let currentSearchTerm = "";
+    let isEditing = false;
+
+    // Local User Settings & Audio State
+    let userScale = parseFloat(localStorage.getItem("3j_font_scale")) || 1;
+    let userTheme = localStorage.getItem("3j_theme") || "original";
+    let userVolume = localStorage.getItem("3j_volume") !== null ? parseFloat(localStorage.getItem("3j_volume")) : 0.5;
+    let isMusicPlaying = false;
+
+    window.addEventListener("DOMContentLoaded", () => {
+        loadUserSettings();
+        initAudioPlayer();
+        checkDisclaimerConsent();
+        initSubjectFilterButtons();
+        updateClock();
+
+        const waitForNeon = setInterval(() => {
+            if (window.sql) {
+                clearInterval(waitForNeon);
+                fetchDataFromNeon();
+                setInterval(fetchDataFromNeon, 3000);
+            }
+        }, 200);
+
+        setInterval(() => {
+            updateClock();
+            checkAndAutoUpdateStatuses();
+        }, 1000);
+    });
+
+    /* --- Audio Player Functionality --- */
+    function initAudioPlayer() {
+        const audio = document.getElementById("bgAudio");
+        const slider = document.getElementById("volumeSlider");
+        audio.volume = userVolume;
+        slider.value = userVolume;
+        updateMusicUI();
+    }
+
+    function playMusic() {
+        const audio = document.getElementById("bgAudio");
+        audio.play().then(() => {
+            isMusicPlaying = true;
+            updateMusicUI();
+        }).catch(err => console.log("Playback error:", err));
+    }
+
+    function pauseMusic() {
+        const audio = document.getElementById("bgAudio");
+        audio.pause();
+        isMusicPlaying = false;
+        updateMusicUI();
+    }
+
+    function toggleMusic() {
+        if (isMusicPlaying) {
+            pauseMusic();
+        } else {
+            playMusic();
+        }
+    }
+
+    function changeVolume(val) {
+        userVolume = parseFloat(val);
+        const audio = document.getElementById("bgAudio");
+        audio.volume = userVolume;
+        localStorage.setItem("3j_volume", userVolume);
+    }
+
+    function updateMusicUI() {
+        const disk = document.getElementById("diskIcon");
+        const btn = document.getElementById("btnMusicToggle");
+        const marqueeTextElem = document.getElementById("musicMarqueeText");
+
+        if (isMusicPlaying) {
+            disk.classList.add("spinning");
+            btn.textContent = "❚❚";
+            marqueeTextElem.classList.add("playing");
+        } else {
+            disk.classList.remove("spinning");
+            btn.textContent = "▶";
+            marqueeTextElem.classList.remove("playing");
+        }
+    }
+
+    /* --- Device Preferences / Settings Management --- */
+    function loadUserSettings() {
+        applyFontSize(userScale);
+        applyTheme(userTheme);
+    }
+
+    function changeFontSize(val) {
+        userScale = parseFloat(val);
+        applyFontSize(userScale);
+        localStorage.setItem("3j_font_scale", userScale);
+    }
+
+    function applyFontSize(scale) {
+        document.documentElement.style.setProperty('--font-scale', scale);
+        document.getElementById("fontSizeSlider").value = scale;
+        document.getElementById("fontSizeValue").textContent = Math.round(scale * 100) + "%";
+    }
+
+    function applyTheme(themeName) {
+        userTheme = themeName;
+        document.body.classList.remove('theme-dark-red', 'theme-light-yellow', 'theme-light-blue');
+        
+        if (themeName !== 'original') {
+            document.body.classList.add(`theme-${themeName}`);
+        }
+
+        document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
+        const activeBtn = document.getElementById(`theme-${themeName}`);
+        if (activeBtn) activeBtn.classList.add('active');
+
+        localStorage.setItem("3j_theme", themeName);
+    }
+
+    function resetUserSettings() {
+        userScale = 1;
+        userTheme = 'original';
+        userVolume = 0.5;
+        applyFontSize(1);
+        applyTheme('original');
+        changeVolume(0.5);
+    }
+
+    function openSettingsModal() {
+        document.getElementById("settingsModal").classList.add("active");
+    }
+
+    function closeSettingsModal() {
+        document.getElementById("settingsModal").classList.remove("active");
+    }
+
+    /* --- Core Neon & Table Functionality --- */
+    async function fetchDataFromNeon() {
+        if (!window.sql) return;
+        try {
+            const rows = await window.sql`SELECT id, task, subject, due_date AS date, status FROM homework ORDER BY created_at DESC;`;
+            const meta = await window.sql`SELECT key, value FROM app_metadata;`;
+
+            homeworkList = rows.map(r => ({
+                id: r.id,
+                task: r.task,
+                subject: r.subject,
+                date: r.date,
+                status: r.status
+            }));
+
+            meta.forEach(item => {
+                if (item.key === 'marquee_text') marqueeText = item.value;
+                if (item.key === 'last_update_time') lastUpdateTime = item.value;
+            });
+
+            initMarquee();
+            renderLastUpdateTime();
+            if (!isEditing) render();
+        } catch (err) {
+            console.error("Neon DB fetch error:", err);
+        }
+    }
+
+    async function addNewRow() {
+        const now = new Date();
+        const todayFormatted = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
+        const newId = "HW" + String(Math.floor(Math.random() * 900) + 100);
+        const newTask = "新功課內容";
+        const newSubject = "中國語文";
+        const newStatus = "待截止";
+
+        homeworkList.unshift({
+            id: newId,
+            task: newTask,
+            subject: newSubject,
+            date: todayFormatted,
+            status: newStatus
+        });
+
+        try {
+            await window.sql`
+                INSERT INTO homework (id, task, subject, due_date, status)
+                VALUES (${newId}, ${newTask}, ${newSubject}, ${todayFormatted}, ${newStatus});
+            `;
+            await updateLastEditTimestamp();
+            render();
+        } catch (err) {
+            console.error("Error inserting row:", err);
+        }
+    }
+
+    async function deleteRow(index) {
+        const target = homeworkList[index];
+        homeworkList.splice(index, 1);
+
+        try {
+            await window.sql`DELETE FROM homework WHERE id = ${target.id};`;
+            await updateLastEditTimestamp();
+            render();
+        } catch (err) {
+            console.error("Error deleting row:", err);
+        }
+    }
+
+    async function updateFieldValue(index, field, value) {
+        const oldId = homeworkList[index].id;
+        homeworkList[index][field] = value;
+
+        try {
+            if (field === 'id') {
+                await window.sql`UPDATE homework SET id = ${value} WHERE id = ${oldId};`;
+            } else if (field === 'task') {
+                await window.sql`UPDATE homework SET task = ${value} WHERE id = ${oldId};`;
+            } else if (field === 'subject') {
+                await window.sql`UPDATE homework SET subject = ${value} WHERE id = ${oldId};`;
+            } else if (field === 'date') {
+                await window.sql`UPDATE homework SET due_date = ${value} WHERE id = ${oldId};`;
+            } else if (field === 'status') {
+                await window.sql`UPDATE homework SET status = ${value} WHERE id = ${oldId};`;
+            }
+            await updateLastEditTimestamp();
+            renderStatsAndCount();
+        } catch (err) {
+            console.error("Error updating field:", err);
+        }
+    }
+
+    async function updateMarqueeText(val) {
+        marqueeText = val || "📢 歡迎使用 3J 功課大屏！請準時交功課，勤奮學習！";
+        document.getElementById("marqueeDisplay").textContent = marqueeText;
+        
+        try {
+            await window.sql`
+                INSERT INTO app_metadata (key, value) VALUES ('marquee_text', ${marqueeText})
+                ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
+            `;
+            await updateLastEditTimestamp();
+        } catch (err) {
+            console.error("Error updating marquee:", err);
+        }
+    }
+
+    async function updateLastEditTimestamp() {
+        const now = new Date();
+        const dd = String(now.getDate()).padStart(2, '0');
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const yyyy = now.getFullYear();
+        const hh = String(now.getHours()).padStart(2, '0');
+        const min = String(now.getMinutes()).padStart(2, '0');
+        
+        lastUpdateTime = `${dd}/${mm}/${yyyy} ${hh}:${min}`;
+        renderLastUpdateTime();
+
+        try {
+            await window.sql`
+                INSERT INTO app_metadata (key, value) VALUES ('last_update_time', ${lastUpdateTime})
+                ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
+            `;
+        } catch (err) {
+            console.error("Error updating timestamp:", err);
+        }
+    }
+
+    function checkDisclaimerConsent() {
+        document.getElementById("termsModal").classList.add("active");
+        document.getElementById("agreeCheckbox").checked = false;
+        document.getElementById("btnEnterApp").disabled = true;
+    }
+
+    function toggleAgreeButton() {
+        const isChecked = document.getElementById("agreeCheckbox").checked;
+        document.getElementById("btnEnterApp").disabled = !isChecked;
+    }
+
+    function acceptTermsAndEnter() {
+        document.getElementById("termsModal").classList.remove("active");
+    }
+
+    function renderLastUpdateTime() {
+        const display = document.getElementById("lastUpdateDisplay");
+        display.textContent = lastUpdateTime ? `最後更新：${lastUpdateTime}` : `最後更新：未有紀錄`;
+    }
+
+    function initMarquee() {
+        document.getElementById("marqueeDisplay").textContent = marqueeText;
+        if (!isEditing) {
+            document.getElementById("marqueeInput").value = marqueeText;
+        }
+    }
+
+    function parseDueDate(dateStr) {
+        if (!dateStr) return null;
+        const parts = dateStr.split('/');
+        if (parts.length !== 3) return null;
+        const day = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const year = parseInt(parts[2], 10);
+        if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
+        return new Date(year, month, day, 0, 0, 0, 0);
+    }
+
+    async function checkAndAutoUpdateStatuses() {
+        const now = new Date();
+        let changed = false;
+
+        for (let i = homeworkList.length - 1; i >= 0; i--) {
+            const item = homeworkList[i];
+            if (!item.date || !item.status) continue;
+
+            const dueDate = parseDueDate(item.date);
+            if (!dueDate) continue;
+
+            const dayBeforeDueDate = new Date(dueDate);
+            dayBeforeDueDate.setDate(dayBeforeDueDate.getDate() - 1);
+
+            const threeDaysAfterDueDate = new Date(dueDate);
+            threeDaysAfterDueDate.setDate(threeDaysAfterDueDate.getDate() + 3);
+
+            if (item.status === "即將截止" && now >= dueDate) {
+                item.status = "已截止";
+                await updateFieldValue(i, 'status', "已截止");
+                changed = true;
+            }
+
+            if (item.status === "待截止" && now >= dayBeforeDueDate) {
+                item.status = "即將截止";
+                await updateFieldValue(i, 'status', "即將截止");
+                changed = true;
+            }
+
+            if (item.status === "已截止" && now >= threeDaysAfterDueDate) {
+                await deleteRow(i);
+                changed = true;
+            }
+        }
+
+        if (changed) render();
+    }
+
+    function updateClock() {
+        const now = new Date();
+        const dd = String(now.getDate()).padStart(2, '0');
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const yyyy = now.getFullYear();
+        const hh = String(now.getHours()).padStart(2, '0');
+        const min = String(now.getMinutes()).padStart(2, '0');
+        const ss = String(now.getSeconds()).padStart(2, '0');
+        document.getElementById('clockDisplay').textContent = `${dd}/${mm}/${yyyy} ${hh}:${min}:${ss}`;
+    }
+
+    function initSubjectFilterButtons() {
+        const container = document.getElementById("subjectFilterGroup");
+        container.innerHTML = "";
+        SUBJECT_LIST.forEach(sub => {
+            const btn = document.createElement("button");
+            btn.className = "filter-btn" + (sub === "全部" ? " active" : "");
+            btn.dataset.subject = sub === "全部" ? "ALL" : sub;
+            btn.textContent = sub;
+            btn.onclick = () => setSubjectFilter(sub === "全部" ? "ALL" : sub);
+            container.appendChild(btn);
+        });
+    }
+
+    function setStatusFilter(status) {
+        currentStatusFilter = status;
+        document.querySelectorAll("#statusFilterGroup .filter-btn").forEach(btn => {
+            btn.classList.toggle("active", btn.dataset.status === status);
+        });
+        render();
+    }
+
+    function setSubjectFilter(subject) {
+        currentSubjectFilter = subject;
+        document.querySelectorAll("#subjectFilterGroup .filter-btn").forEach(btn => {
+            btn.classList.toggle("active", btn.dataset.subject === subject);
+        });
+        render();
+    }
+
+    function resetAllFilters() {
+        currentSearchTerm = "";
+        document.getElementById("searchInput").value = "";
+        setStatusFilter("ALL");
+        setSubjectFilter("ALL");
+    }
+
+    function onSearchInput(val) {
+        currentSearchTerm = val.trim().toLowerCase();
+        render();
+    }
+
+    function handleEditClick() {
+        if (isEditing) {
+            isEditing = false;
+            document.getElementById("app").classList.remove("editing-mode");
+            const btn = document.getElementById("btnEditToggle");
+            btn.classList.remove("editing");
+            btn.innerHTML = "✏ 編輯";
+            render();
+        } else {
+            openPasswordModal();
+        }
+    }
+
+    function openPasswordModal() {
+        document.getElementById("pwdInput").value = "";
+        document.getElementById("modalError").style.display = "none";
+        document.getElementById("passwordModal").classList.add("active");
+        setTimeout(() => document.getElementById("pwdInput").focus(), 100);
+    }
+
+    function closePasswordModal() {
+        document.getElementById("passwordModal").classList.remove("active");
+    }
+
+    function verifyPassword() {
+        const input = document.getElementById("pwdInput").value;
+        if (input === EDIT_PASSWORD) {
+            closePasswordModal();
+            isEditing = true;
+            document.getElementById("app").classList.add("editing-mode");
+            const btn = document.getElementById("btnEditToggle");
+            btn.classList.add("editing");
+            btn.innerHTML = "✔ 完成編輯";
+            render();
+        } else {
+            document.getElementById("modalError").style.display = "block";
+        }
+    }
+
+    function render() {
+        const tbody = document.getElementById("homeworkTableBody");
+        tbody.innerHTML = "";
+
+        const filteredList = homeworkList.filter(item => {
+            const matchesStatus = (currentStatusFilter === "ALL" || item.status === currentStatusFilter);
+            const matchesSubject = (currentSubjectFilter === "ALL" || item.subject === currentSubjectFilter);
+            const matchesSearch = !currentSearchTerm || 
+                (item.id && item.id.toLowerCase().includes(currentSearchTerm)) ||
+                (item.task && item.task.toLowerCase().includes(currentSearchTerm)) ||
+                (item.subject && item.subject.toLowerCase().includes(currentSearchTerm));
+
+            return matchesStatus && matchesSubject && matchesSearch;
+        });
+
+        document.getElementById("emptyMessage").style.display = filteredList.length === 0 ? "block" : "none";
+
+        filteredList.forEach((item) => {
+            const actualIndex = homeworkList.indexOf(item);
+            const tr = document.createElement("tr");
+
+            if (isEditing) {
+                let subjectOptions = SUBJECT_LIST.filter(s => s !== "全部").map(s => 
+                    `<option value="${s}" ${s === item.subject ? 'selected' : ''}>${s}</option>`
+                ).join("");
+
+                let statusOptions = STATUS_LIST.map(s => 
+                    `<option value="${s}" ${s === item.status ? 'selected' : ''}>${s}</option>`
+                ).join("");
+
+                tr.innerHTML = `
+                    <td><input class="editable-input" value="${item.id || ''}" onchange="updateFieldValue(${actualIndex}, 'id', this.value)"></td>
+                    <td><input class="editable-input" value="${item.task || ''}" onchange="updateFieldValue(${actualIndex}, 'task', this.value)"></td>
+                    <td>
+                        <select class="editable-select" onchange="updateFieldValue(${actualIndex}, 'subject', this.value)">
+                            ${subjectOptions}
+                        </select>
+                    </td>
+                    <td><input class="editable-input" value="${item.date || ''}" placeholder="D/M/YYYY" onchange="updateFieldValue(${actualIndex}, 'date', this.value)"></td>
+                    <td>
+                        <select class="editable-select" onchange="updateFieldValue(${actualIndex}, 'status', this.value)">
+                            ${statusOptions}
+                        </select>
+                    </td>
+                    <td class="td-actions">
+                        <button class="btn-delete" onclick="deleteRow(${actualIndex})">刪除</button>
+                    </td>
+                `;
+            } else {
+                const statusClass = item.status ? `status-${item.status}` : '';
+                tr.innerHTML = `
+                    <td>${item.id || ''}</td>
+                    <td>${item.task || ''}</td>
+                    <td>${item.subject || ''}</td>
+                    <td>${item.date || ''}</td>
+                    <td class="${statusClass}">${item.status || ''}</td>
+                    <td class="td-actions"></td>
+                `;
+            }
+
+            tbody.appendChild(tr);
+        });
+
+        renderStatsAndCount(filteredList.length);
+    }
+
+    function renderStatsAndCount(visibleCount = 0) {
+        let upcoming = 0, expired = 0, pending = 0, late = 0, unissued = 0;
+
+        homeworkList.forEach(item => {
+            if (item.status === "即將截止") upcoming++;
+            else if (item.status === "已截止") expired++;
+            else if (item.status === "待截止") pending++;
+            else if (item.status === "晚點") late++;
+            else if (item.status === "待發放") unissued++;
+        });
+
+        document.getElementById("countUpcoming").textContent = upcoming;
+        document.getElementById("countExpired").textContent = expired;
+        document.getElementById("countPending").textContent = pending;
+        document.getElementById("countLate").textContent = late;
+        document.getElementById("countUnissued").textContent = unissued;
+
+        document.getElementById("recordCounter").textContent = `顯示 ${visibleCount} 項 / 共 ${homeworkList.length} 項`;
+    }
+</script>
+</body>
+</html>
