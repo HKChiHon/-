@@ -25,6 +25,11 @@
             --table-id-color: #b3d9ff;
             --table-date-color: #d0e4ff;
             
+            --btn-edit-bg: #e60000;
+            --btn-edit-hover: #ff1a1a;
+            --btn-edit-active: #00b33c;
+            --btn-edit-text: #ffffff;
+
             --status-upcoming: #ffff00;
             --status-expired: #ff4d4d;
             --status-pending: #00ff66;
@@ -47,6 +52,11 @@
             --subtext-color: #ffb3b3;
             --table-id-color: #ffd6d6;
             --table-date-color: #ffe6e6;
+            
+            --btn-edit-bg: #990000;
+            --btn-edit-hover: #cc0000;
+            --btn-edit-active: #28a745;
+            --btn-edit-text: #ffffff;
         }
 
         body.theme-light-yellow {
@@ -60,6 +70,11 @@
             --subtext-color: #594014;
             --table-id-color: #422d0a;
             --table-date-color: #332105;
+
+            --btn-edit-bg: #d97706;
+            --btn-edit-hover: #b45309;
+            --btn-edit-active: #15803d;
+            --btn-edit-text: #ffffff;
         }
 
         body.theme-light-blue {
@@ -73,6 +88,36 @@
             --subtext-color: #1e40af;
             --table-id-color: #1e3a8a;
             --table-date-color: #172554;
+
+            --btn-edit-bg: #2563eb;
+            --btn-edit-hover: #1d4ed8;
+            --btn-edit-active: #16a34a;
+            --btn-edit-text: #ffffff;
+        }
+
+        /* Notebook Theme (筆記本主題) */
+        body.theme-notebook {
+            --bg-gradient: #ffffff;
+            --panel-bg: #ffffff;
+            --border-color: #000000;
+            --header-bg: #f0f0f0;
+            --row-even: #ffffff;
+            --row-odd: #ffffff;
+            --text-main: #000000;
+            --subtext-color: #333333;
+            --table-id-color: #000000;
+            --table-date-color: #000000;
+
+            --btn-edit-bg: #000000;
+            --btn-edit-hover: #333333;
+            --btn-edit-active: #15803d;
+            --btn-edit-text: #ffffff;
+
+            --status-upcoming: #b37400;
+            --status-expired: #cc0000;
+            --status-pending: #00802b;
+            --status-late: #7000cc;
+            --status-unissued: #007399;
         }
 
         * {
@@ -113,7 +158,7 @@
             padding: 12px 20px;
             border-radius: 8px;
             backdrop-filter: blur(10px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             flex-wrap: wrap;
             gap: 10px;
         }
@@ -142,6 +187,10 @@
             white-space: nowrap;
         }
 
+        body.theme-notebook .app-title {
+            text-shadow: none;
+        }
+
         /* Unified Height Bar Styling across Clock, Settings, Player, and Last Update */
         .clock-display {
             font-family: var(--mtr-font);
@@ -154,14 +203,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.04);
             border-radius: 6px;
             border: 1px solid var(--border-color);
             white-space: nowrap;
         }
 
         .btn-settings {
-            background: rgba(255, 255, 255, 0.12);
+            background: rgba(0, 0, 0, 0.05);
             color: var(--text-main);
             border: 1px solid var(--border-color);
             padding: 0 14px;
@@ -178,7 +227,7 @@
         }
 
         .btn-settings:hover {
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(0, 0, 0, 0.12);
             transform: scale(1.03);
         }
 
@@ -187,7 +236,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.04);
             border: 1px solid var(--border-color);
             padding: 0 10px;
             height: 36px;
@@ -214,7 +263,7 @@
             width: 140px;
             overflow: hidden;
             white-space: nowrap;
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(0, 0, 0, 0.05);
             border-radius: 4px;
             padding: 2px 0;
             border: 1px solid var(--border-color);
@@ -226,7 +275,7 @@
             display: inline-block;
             padding-left: 100%;
             animation: musicMarquee 12s linear infinite;
-            animation-play-state: paused; /* Controlled via Javascript */
+            animation-play-state: paused;
             font-size: calc(12px * var(--font-scale));
             color: var(--subtext-color);
             font-family: var(--mtr-font);
@@ -242,7 +291,7 @@
         }
 
         .btn-music-toggle {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(0, 0, 0, 0.08);
             color: var(--text-main);
             border: 1px solid var(--border-color);
             border-radius: 4px;
@@ -258,7 +307,7 @@
         }
 
         .btn-music-toggle:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(0, 0, 0, 0.18);
         }
 
         .volume-container {
@@ -282,7 +331,7 @@
             font-family: var(--mtr-font);
             font-size: calc(14px * var(--font-scale));
             color: var(--subtext-color);
-            background: rgba(0, 0, 0, 0.15);
+            background: rgba(0, 0, 0, 0.04);
             padding: 0 12px;
             height: 36px;
             display: flex;
@@ -294,9 +343,9 @@
         }
 
         .btn-edit-toggle {
-            background-color: #e60000;
-            color: #ffffff;
-            border: none;
+            background-color: var(--btn-edit-bg);
+            color: var(--btn-edit-text);
+            border: 1px solid var(--border-color);
             padding: 0 18px;
             height: 36px;
             border-radius: 6px;
@@ -305,7 +354,7 @@
             font-family: var(--mtr-font);
             cursor: pointer;
             transition: all 0.2s ease;
-            box-shadow: 0 2px 8px rgba(230, 0, 0, 0.4);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -314,13 +363,13 @@
         }
 
         .btn-edit-toggle:hover {
-            background-color: #ff1a1a;
+            background-color: var(--btn-edit-hover);
             transform: translateY(-1px);
         }
 
         .btn-edit-toggle.editing {
-            background-color: #00b33c;
-            box-shadow: 0 2px 8px rgba(0, 179, 60, 0.4);
+            background-color: var(--btn-edit-active);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
         .filter-section {
@@ -357,7 +406,7 @@
         }
 
         .filter-btn {
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.04);
             border: 1px solid var(--border-color);
             color: var(--text-main);
             padding: 5px 11px;
@@ -371,7 +420,7 @@
         }
 
         .filter-btn:hover {
-            background: rgba(255, 255, 255, 0.18);
+            background: rgba(0, 0, 0, 0.1);
         }
 
         .filter-btn.active {
@@ -379,7 +428,14 @@
             border-color: #4da6ff;
             color: #ffffff;
             font-weight: 400;
-            box-shadow: 0 0 8px rgba(30, 98, 168, 0.6);
+            box-shadow: 0 0 8px rgba(30, 98, 168, 0.4);
+        }
+
+        body.theme-notebook .filter-btn.active {
+            background: #000000;
+            border-color: #000000;
+            color: #ffffff;
+            box-shadow: none;
         }
 
         .filter-btn[data-status="即將截止"].active { background: #808000; border-color: #ffff00; color: #ffffaa; }
@@ -388,8 +444,14 @@
         .filter-btn[data-status="晚點"].active { background: #4d0080; border-color: #c05cff; color: #f0ccff; }
         .filter-btn[data-status="待發放"].active { background: #006680; border-color: #00e5ff; color: #ccf8ff; }
 
+        body.theme-notebook .filter-btn[data-status="即將截止"].active { background: #b37400; border-color: #000000; color: #ffffff; }
+        body.theme-notebook .filter-btn[data-status="已截止"].active { background: #cc0000; border-color: #000000; color: #ffffff; }
+        body.theme-notebook .filter-btn[data-status="待截止"].active { background: #00802b; border-color: #000000; color: #ffffff; }
+        body.theme-notebook .filter-btn[data-status="晚點"].active { background: #7000cc; border-color: #000000; color: #ffffff; }
+        body.theme-notebook .filter-btn[data-status="待發放"].active { background: #007399; border-color: #000000; color: #ffffff; }
+
         .btn-reset {
-            background: rgba(42, 63, 95, 0.8);
+            background: rgba(0, 0, 0, 0.08);
             border: 1px solid var(--border-color);
             color: var(--text-main);
             margin-left: 6px;
@@ -404,7 +466,7 @@
 
         .search-input {
             flex: 1;
-            background: rgba(0, 0, 0, 0.15);
+            background: rgba(0, 0, 0, 0.02);
             border: 1px solid var(--border-color);
             border-radius: 4px;
             padding: 8px 12px;
@@ -415,14 +477,14 @@
         }
 
         .search-input:focus {
-            border-color: #00d4ff;
-            box-shadow: 0 0 6px rgba(0, 212, 255, 0.3);
+            border-color: var(--text-main);
+            box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
         }
 
         .marquee-container {
             width: 100%;
-            background: rgba(0, 0, 0, 0.15);
-            border: 1px solid rgba(255, 204, 0, 0.4);
+            background: rgba(0, 0, 0, 0.02);
+            border: 1px solid var(--border-color);
             border-radius: 4px;
             overflow: hidden;
             white-space: nowrap;
@@ -433,7 +495,7 @@
             display: inline-block;
             padding-left: 100%;
             animation: marquee 18s linear infinite;
-            color: #d9a300;
+            color: var(--text-main);
             font-size: calc(14px * var(--font-scale));
             letter-spacing: 1px;
             font-family: var(--mtr-font);
@@ -457,11 +519,11 @@
 
         .marquee-edit-input {
             width: 100%;
-            background: rgba(5, 18, 36, 0.9);
-            border: 1px solid #ffcc00;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
             border-radius: 4px;
             padding: 8px 12px;
-            color: #ffcc00;
+            color: var(--text-main);
             font-size: calc(14px * var(--font-scale));
             font-family: var(--mtr-font);
             outline: none;
@@ -496,7 +558,7 @@
             background: var(--panel-bg);
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
             max-height: 60vh;
             -webkit-overflow-scrolling: touch;
         }
@@ -538,7 +600,7 @@
         tbody tr:nth-child(even) { background-color: var(--row-even); }
         tbody tr:nth-child(odd) { background-color: var(--row-odd); }
 
-        tbody tr:hover { background-color: rgba(255, 255, 255, 0.1); }
+        tbody tr:hover { background-color: rgba(0, 0, 0, 0.04); }
 
         td {
             padding: 8px 16px;
@@ -566,17 +628,17 @@
         body.theme-original .status-晚點, body.theme-dark-red .status-晚點 { color: #c05cff; }
         body.theme-original .status-待發放, body.theme-dark-red .status-待發放 { color: #00e5ff; }
 
-        /* Light background status colors */
-        body.theme-light-yellow .status-即將截止, body.theme-light-blue .status-即將截止 { color: #b37400; font-weight: 600; }
-        body.theme-light-yellow .status-已截止, body.theme-light-blue .status-已截止 { color: #cc0000; font-weight: 600; }
-        body.theme-light-yellow .status-待截止, body.theme-light-blue .status-待截止 { color: #00802b; font-weight: 600; }
-        body.theme-light-yellow .status-晚點, body.theme-light-blue .status-晚點 { color: #7000cc; font-weight: 600; }
-        body.theme-light-yellow .status-待發放, body.theme-light-blue .status-待發放 { color: #007399; font-weight: 600; }
+        /* Light & Notebook background status colors */
+        body.theme-light-yellow .status-即將截止, body.theme-light-blue .status-即將截止, body.theme-notebook .status-即將截止 { color: #b37400; font-weight: 600; }
+        body.theme-light-yellow .status-已截止, body.theme-light-blue .status-已截止, body.theme-notebook .status-已截止 { color: #cc0000; font-weight: 600; }
+        body.theme-light-yellow .status-待截止, body.theme-light-blue .status-待截止, body.theme-notebook .status-待截止 { color: #00802b; font-weight: 600; }
+        body.theme-light-yellow .status-晚點, body.theme-light-blue .status-晚點, body.theme-notebook .status-晚點 { color: #7000cc; font-weight: 600; }
+        body.theme-light-yellow .status-待發放, body.theme-light-blue .status-待發放, body.theme-notebook .status-待發放 { color: #007399; font-weight: 600; }
 
         .editable-input, .editable-select {
-            background: rgba(5, 18, 36, 0.9);
-            border: 1px solid #4da6ff;
-            color: #ffffff;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
             padding: 5px 8px;
             border-radius: 4px;
             font-family: var(--mtr-font);
@@ -586,8 +648,8 @@
         }
 
         .editable-select option {
-            background: #092e4e;
-            color: #ffffff;
+            background: var(--header-bg);
+            color: var(--text-main);
         }
 
         .btn-add-row {
@@ -604,7 +666,13 @@
             transition: background 0.2s ease;
         }
 
+        body.theme-notebook .btn-add-row {
+            background: #000000;
+            color: #ffffff;
+        }
+
         .btn-add-row:hover { background: #3399ff; }
+        body.theme-notebook .btn-add-row:hover { background: #333333; }
 
         .btn-delete {
             background: #cc0000;
@@ -654,7 +722,7 @@
             padding: 24px;
             width: 100%;
             max-width: 380px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             display: flex;
             flex-direction: column;
             gap: 16px;
@@ -666,42 +734,43 @@
             transform: scale(1);
         }
 
+        /* Dynamically Match Pop-Up Disclaimer Warning Card with Active Theme */
         .terms-card {
-            background: #092e4e;
-            border: 2px solid #ffcc00;
+            background: var(--panel-bg);
+            border: 2px solid var(--border-color);
             border-radius: 12px;
             padding: 28px 24px;
             max-width: 480px;
             width: 100%;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             display: flex;
             flex-direction: column;
             gap: 20px;
             text-align: center;
             transform: scale(0.85);
-            transition: transform 0.3s ease;
+            transition: transform 0.3s ease, background 0.4s ease, border-color 0.4s ease;
         }
 
         .terms-header {
             font-size: calc(20px * var(--font-scale));
-            color: #ffcc00;
-            font-weight: 400;
+            color: var(--text-main);
+            font-weight: 600;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            border-bottom: 1px solid rgba(255, 204, 0, 0.3);
+            border-bottom: 1px solid var(--border-color);
             padding-bottom: 12px;
         }
 
         .terms-content-box {
-            background: rgba(5, 18, 36, 0.8);
-            border: 1px solid rgba(255, 204, 0, 0.3);
+            background: rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
             border-radius: 6px;
             padding: 16px;
             font-size: calc(16px * var(--font-scale));
             line-height: 1.6;
-            color: #ffffff;
+            color: var(--text-main);
             text-align: left;
         }
 
@@ -711,7 +780,7 @@
             justify-content: center;
             gap: 10px;
             font-size: calc(15px * var(--font-scale));
-            color: #d1e4ff;
+            color: var(--subtext-color);
             cursor: pointer;
             user-select: none;
             padding: 4px 0;
@@ -725,9 +794,9 @@
         }
 
         .terms-btn-enter {
-            background: #0080ff;
-            color: #ffffff;
-            border: none;
+            background: var(--btn-edit-bg);
+            color: var(--btn-edit-text);
+            border: 1px solid var(--border-color);
             padding: 10px;
             border-radius: 6px;
             font-size: calc(16px * var(--font-scale));
@@ -737,9 +806,13 @@
             width: 100%;
         }
 
+        .terms-btn-enter:hover:not(:disabled) {
+            background: var(--btn-edit-hover);
+        }
+
         .terms-btn-enter:disabled {
-            background: #2a415a;
-            color: #88a3be;
+            background: rgba(128, 128, 128, 0.3);
+            color: var(--subtext-color);
             cursor: not-allowed;
             opacity: 0.6;
         }
@@ -777,7 +850,7 @@
             padding: 8px 10px;
             border-radius: 6px;
             border: 1px solid var(--border-color);
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.04);
             color: var(--text-main);
             font-family: var(--mtr-font);
             font-size: calc(13px * var(--font-scale));
@@ -786,8 +859,8 @@
         }
 
         .theme-btn:hover, .theme-btn.active {
-            border-color: #00d4ff;
-            background: rgba(0, 212, 255, 0.2);
+            border-color: var(--text-main);
+            background: rgba(0, 0, 0, 0.12);
             font-weight: 400;
         }
 
@@ -814,11 +887,11 @@
 
         .modal-input {
             width: 100%;
-            background: rgba(5, 18, 36, 0.9);
-            border: 1px solid #4da6ff;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
             border-radius: 4px;
             padding: 8px 12px;
-            color: #ffffff;
+            color: var(--text-main);
             font-size: calc(15px * var(--font-scale));
             outline: none;
             text-align: center;
@@ -842,8 +915,10 @@
         .modal-btn:hover { opacity: 0.9; }
 
         .modal-btn-confirm { background: #0080ff; color: #ffffff; }
-        .modal-btn-cancel { background: #4a6fa5; color: #ffffff; }
+        .modal-btn-cancel { background: #666666; color: #ffffff; }
         .modal-btn-reset { background: #b33939; color: #ffffff; }
+
+        body.theme-notebook .modal-btn-confirm { background: #000000; color: #ffffff; }
 
         .app-footer {
             display: flex;
@@ -946,6 +1021,16 @@
             <div class="btn-group" id="subjectFilterGroup"></div>
         </div>
 
+        <!-- Date Sort Filter Located Right Under Subject Filter -->
+        <div class="filter-row">
+            <span class="filter-label">日期排序：</span>
+            <div class="btn-group" id="dateSortFilterGroup">
+                <button class="filter-btn active" data-sort="NONE" onclick="setDateSort('NONE')">預設排序</button>
+                <button class="filter-btn" data-sort="ASC" onclick="setDateSort('ASC')">日期升序 (由近至遠)</button>
+                <button class="filter-btn" data-sort="DESC" onclick="setDateSort('DESC')">日期降序 (由遠至近)</button>
+            </div>
+        </div>
+
         <div class="search-container">
             <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜尋編號、課業名稱或科目..." oninput="onSearchInput(this.value)">
         </div>
@@ -1024,6 +1109,7 @@
                 <button class="theme-btn" id="theme-dark-red" onclick="applyTheme('dark-red')">深紅 (Dark Red)</button>
                 <button class="theme-btn" id="theme-light-yellow" onclick="applyTheme('light-yellow')">淺黃 (Light Yellow)</button>
                 <button class="theme-btn" id="theme-light-blue" onclick="applyTheme('light-blue')">淺藍 (Light Blue)</button>
+                <button class="theme-btn" id="theme-notebook" onclick="applyTheme('notebook')">筆記本 (Notebook)</button>
             </div>
         </div>
 
@@ -1051,6 +1137,7 @@
     let lastUpdateTime = "";
     let currentStatusFilter = "ALL";
     let currentSubjectFilter = "ALL";
+    let currentDateSort = "NONE";
     let currentSearchTerm = "";
     let isEditing = false;
 
@@ -1156,7 +1243,7 @@
 
     function applyTheme(themeName) {
         userTheme = themeName;
-        document.body.classList.remove('theme-dark-red', 'theme-light-yellow', 'theme-light-blue');
+        document.body.classList.remove('theme-dark-red', 'theme-light-yellow', 'theme-light-blue', 'theme-notebook');
         
         if (themeName !== 'original') {
             document.body.classList.add(`theme-${themeName}`);
@@ -1430,11 +1517,20 @@
         render();
     }
 
+    function setDateSort(sortMode) {
+        currentDateSort = sortMode;
+        document.querySelectorAll("#dateSortFilterGroup .filter-btn").forEach(btn => {
+            btn.classList.toggle("active", btn.dataset.sort === sortMode);
+        });
+        render();
+    }
+
     function resetAllFilters() {
         currentSearchTerm = "";
         document.getElementById("searchInput").value = "";
         setStatusFilter("ALL");
         setSubjectFilter("ALL");
+        setDateSort("NONE");
     }
 
     function onSearchInput(val) {
@@ -1485,7 +1581,7 @@
         const tbody = document.getElementById("homeworkTableBody");
         tbody.innerHTML = "";
 
-        const filteredList = homeworkList.filter(item => {
+        let filteredList = homeworkList.filter(item => {
             const matchesStatus = (currentStatusFilter === "ALL" || item.status === currentStatusFilter);
             const matchesSubject = (currentSubjectFilter === "ALL" || item.subject === currentSubjectFilter);
             const matchesSearch = !currentSearchTerm || 
@@ -1495,6 +1591,18 @@
 
             return matchesStatus && matchesSubject && matchesSearch;
         });
+
+        if (currentDateSort !== "NONE") {
+            filteredList.sort((a, b) => {
+                const dateA = parseDueDate(a.date);
+                const dateB = parseDueDate(b.date);
+                if (!dateA && !dateB) return 0;
+                if (!dateA) return 1;
+                if (!dateB) return -1;
+
+                return currentDateSort === "ASC" ? dateA - dateB : dateB - dateA;
+            });
+        }
 
         document.getElementById("emptyMessage").style.display = filteredList.length === 0 ? "block" : "none";
 
