@@ -95,6 +95,31 @@
             --btn-edit-text: #ffffff;
         }
 
+        /* Autumn Theme (秋天主題 - Warm Orange & Brown Palette) */
+        body.theme-autumn {
+            --bg-gradient: linear-gradient(135deg, #2b1103 0%, #4a2107 50%, #361705 100%);
+            --panel-bg: rgba(61, 29, 10, 0.88);
+            --border-color: rgba(184, 98, 27, 0.6);
+            --header-bg: #5c2809;
+            --row-even: rgba(54, 25, 8, 0.88);
+            --row-odd: rgba(66, 32, 11, 0.88);
+            --text-main: #fff3e6;
+            --subtext-color: #f7b267;
+            --table-id-color: #fbd1a2;
+            --table-date-color: #ffe8d6;
+
+            --btn-edit-bg: #c05621;
+            --btn-edit-hover: #dd6b20;
+            --btn-edit-active: #2f855a;
+            --btn-edit-text: #ffffff;
+
+            --status-upcoming: #ffd166;
+            --status-expired: #ff5964;
+            --status-pending: #06d6a0;
+            --status-late: #e0aaff;
+            --status-unissued: #4ea8de;
+        }
+
         /* Notebook Theme (筆記本主題) */
         body.theme-notebook {
             --bg-gradient: #ffffff;
@@ -147,6 +172,153 @@
             min-height: 100vh;
             padding: 12px 16px;
             gap: 12px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Big Wind Swaying Effect applied to page components */
+        @keyframes windSway {
+            0% { transform: rotate(0deg) translateX(0px); }
+            20% { transform: rotate(1.2deg) translateX(-4px); }
+            45% { transform: rotate(-1.5deg) translateX(5px); }
+            70% { transform: rotate(0.8deg) translateX(-3px); }
+            85% { transform: rotate(-0.6deg) translateX(2px); }
+            100% { transform: rotate(0deg) translateX(0px); }
+        }
+
+        .wind-sway-active {
+            animation: windSway 4.5s ease-in-out infinite;
+            transform-origin: center top;
+            will-change: transform;
+        }
+
+        .app-header.wind-sway-active { animation-delay: 0s; }
+        .filter-section.wind-sway-active { animation-delay: 0.6s; }
+        .stats-bar.wind-sway-active { animation-delay: 1.2s; }
+        .table-area.wind-sway-active { animation-delay: 1.8s; }
+        .app-footer.wind-sway-active { animation-delay: 2.4s; }
+
+        /* Weather Animations (Layer On Top Of Everything) */
+        .weather-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9999; /* Layered on top of everything */
+            overflow: hidden;
+            display: block;
+        }
+
+        .weather-overlay.disabled {
+            display: none !important;
+        }
+
+        .wind-line {
+            position: absolute;
+            height: 3px;
+            background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0) 100%);
+            opacity: 0.55;
+            border-radius: 3px;
+            animation: moveWind linear infinite;
+            filter: drop-shadow(0 0 2px rgba(255,255,255,0.4));
+        }
+
+        body.theme-light-yellow .wind-line,
+        body.theme-light-blue .wind-line,
+        body.theme-notebook .wind-line {
+            background: linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(50,50,50,0.5) 50%, rgba(0,0,0,0) 100%);
+        }
+
+        @keyframes moveWind {
+            0% {
+                transform: translateX(105vw);
+            }
+            100% {
+                transform: translateX(-400px);
+            }
+        }
+
+        .leaf-element {
+            position: absolute;
+            width: 36px;
+            height: 36px;
+            background-image: url('leaf 1.webp');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0.9;
+            mix-blend-mode: screen;
+            animation: moveLeaf linear infinite;
+            filter: drop-shadow(0 2px 5px rgba(0,0,0,0.4));
+        }
+
+        /* Stick Element (stick 1.webp) sharing flying animation behavior */
+        .stick-element {
+            position: absolute;
+            width: 42px;
+            height: 42px;
+            background-image: url('stick 1.webp');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0.95;
+            mix-blend-mode: screen;
+            animation: moveLeaf linear infinite;
+            filter: drop-shadow(0 3px 6px rgba(0,0,0,0.5));
+        }
+
+        body.theme-light-yellow .leaf-element,
+        body.theme-light-blue .leaf-element,
+        body.theme-notebook .leaf-element,
+        body.theme-light-yellow .stick-element,
+        body.theme-light-blue .stick-element,
+        body.theme-notebook .stick-element {
+            mix-blend-mode: multiply;
+        }
+
+        @keyframes moveLeaf {
+            0% {
+                transform: translate(105vw, 0) rotate(0deg);
+            }
+            100% {
+                transform: translate(-150px, 160px) rotate(-540deg);
+            }
+        }
+
+        /* Continuous Smooth Flying Boy Element (Zero Pause, Linear Glide + Soft Wave Motion) */
+        .boy-element {
+            position: absolute;
+            width: 110px;
+            height: 110px;
+            background-image: url('boy 1.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0.95;
+            top: var(--boy-top, 30vh);
+            animation: moveBoyHorizontal 8s linear infinite;
+            filter: drop-shadow(0 4px 10px rgba(0,0,0,0.4));
+            will-change: transform;
+        }
+
+        @keyframes moveBoyHorizontal {
+            0% {
+                transform: translateX(-150px) translateY(0px) rotate(0deg);
+            }
+            25% {
+                transform: translateX(25vw) translateY(-25px) rotate(-3deg);
+            }
+            50% {
+                transform: translateX(50vw) translateY(20px) rotate(2deg);
+            }
+            75% {
+                transform: translateX(75vw) translateY(-20px) rotate(-2deg);
+            }
+            100% {
+                transform: translateX(105vw) translateY(0px) rotate(0deg);
+            }
         }
 
         .app-header {
@@ -185,6 +357,10 @@
             font-family: var(--mtr-font);
             text-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
             white-space: nowrap;
+        }
+
+        body.theme-autumn .app-title {
+            text-shadow: 0 0 10px rgba(247, 178, 103, 0.3);
         }
 
         body.theme-notebook .app-title {
@@ -327,6 +503,10 @@
             cursor: pointer;
         }
 
+        body.theme-autumn .volume-slider {
+            accent-color: #dd6b20;
+        }
+
         .last-update-display {
             font-family: var(--mtr-font);
             font-size: calc(14px * var(--font-scale));
@@ -431,6 +611,13 @@
             box-shadow: 0 0 8px rgba(30, 98, 168, 0.4);
         }
 
+        body.theme-autumn .filter-btn.active {
+            background: #c05621;
+            border-color: #dd6b20;
+            color: #ffffff;
+            box-shadow: 0 0 8px rgba(221, 107, 32, 0.4);
+        }
+
         body.theme-notebook .filter-btn.active {
             background: #000000;
             border-color: #000000;
@@ -443,6 +630,12 @@
         .filter-btn[data-status="待截止"].active { background: #006622; border-color: #00ff66; color: #ccffdd; }
         .filter-btn[data-status="晚點"].active { background: #4d0080; border-color: #c05cff; color: #f0ccff; }
         .filter-btn[data-status="待發放"].active { background: #006680; border-color: #00e5ff; color: #ccf8ff; }
+
+        body.theme-autumn .filter-btn[data-status="即將截止"].active { background: #7b5200; border-color: #ffd166; color: #fff3d1; }
+        body.theme-autumn .filter-btn[data-status="已截止"].active { background: #7a1c22; border-color: #ff5964; color: #ffe6e8; }
+        body.theme-autumn .filter-btn[data-status="待截止"].active { background: #035e46; border-color: #06d6a0; color: #d8fbf1; }
+        body.theme-autumn .filter-btn[data-status="晚點"].active { background: #5c357a; border-color: #e0aaff; color: #f7ebff; }
+        body.theme-autumn .filter-btn[data-status="待發放"].active { background: #1a4968; border-color: #4ea8de; color: #e1f2fb; }
 
         body.theme-notebook .filter-btn[data-status="即將截止"].active { background: #b37400; border-color: #000000; color: #ffffff; }
         body.theme-notebook .filter-btn[data-status="已截止"].active { background: #cc0000; border-color: #000000; color: #ffffff; }
@@ -503,7 +696,8 @@
         }
 
         body.theme-original .marquee-content,
-        body.theme-dark-red .marquee-content {
+        body.theme-dark-red .marquee-content,
+        body.theme-autumn .marquee-content {
             color: #ffcc00;
         }
 
@@ -621,12 +815,18 @@
         .status-晚點 { color: var(--status-late); }
         .status-待發放 { color: var(--status-unissued); }
 
-        /* Dark background status colors */
+        /* Dark & Autumn background status colors */
         body.theme-original .status-即將截止, body.theme-dark-red .status-即將截止 { color: #ffff00; }
         body.theme-original .status-已截止, body.theme-dark-red .status-已截止 { color: #ff4d4d; }
         body.theme-original .status-待截止, body.theme-dark-red .status-待截止 { color: #00ff66; }
         body.theme-original .status-晚點, body.theme-dark-red .status-晚點 { color: #c05cff; }
         body.theme-original .status-待發放, body.theme-dark-red .status-待發放 { color: #00e5ff; }
+
+        body.theme-autumn .status-即將截止 { color: #ffd166; font-weight: 500; }
+        body.theme-autumn .status-已截止 { color: #ff5964; font-weight: 500; }
+        body.theme-autumn .status-待截止 { color: #06d6a0; font-weight: 500; }
+        body.theme-autumn .status-晚點 { color: #e0aaff; font-weight: 500; }
+        body.theme-autumn .status-待發放 { color: #4ea8de; font-weight: 500; }
 
         /* Light & Notebook background status colors */
         body.theme-light-yellow .status-即將截止, body.theme-light-blue .status-即將截止, body.theme-notebook .status-即將截止 { color: #b37400; font-weight: 600; }
@@ -666,12 +866,18 @@
             transition: background 0.2s ease;
         }
 
+        body.theme-autumn .btn-add-row {
+            background: #dd6b20;
+            color: #ffffff;
+        }
+
         body.theme-notebook .btn-add-row {
             background: #000000;
             color: #ffffff;
         }
 
         .btn-add-row:hover { background: #3399ff; }
+        body.theme-autumn .btn-add-row:hover { background: #e28743; }
         body.theme-notebook .btn-add-row:hover { background: #333333; }
 
         .btn-delete {
@@ -793,6 +999,10 @@
             accent-color: #0080ff;
         }
 
+        body.theme-autumn .terms-checkbox-label input[type="checkbox"] {
+            accent-color: #dd6b20;
+        }
+
         .terms-btn-enter {
             background: var(--btn-edit-bg);
             color: var(--btn-edit-text);
@@ -876,11 +1086,36 @@
             cursor: pointer;
         }
 
+        body.theme-autumn .font-slider {
+            accent-color: #dd6b20;
+        }
+
         .font-val-badge {
             font-size: calc(13px * var(--font-scale));
             color: var(--text-main);
             min-width: 40px;
             text-align: right;
+        }
+
+        .setting-checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: calc(14px * var(--font-scale));
+            color: var(--text-main);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .setting-checkbox-label input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #0080ff;
+            cursor: pointer;
+        }
+
+        body.theme-autumn .setting-checkbox-label input[type="checkbox"] {
+            accent-color: #dd6b20;
         }
 
         .modal-title { font-size: calc(18px * var(--font-scale)); color: var(--text-main); text-align: center; }
@@ -918,6 +1153,7 @@
         .modal-btn-cancel { background: #666666; color: #ffffff; }
         .modal-btn-reset { background: #b33939; color: #ffffff; }
 
+        body.theme-autumn .modal-btn-confirm { background: #dd6b20; color: #ffffff; }
         body.theme-notebook .modal-btn-confirm { background: #000000; color: #ffffff; }
 
         .app-footer {
@@ -952,6 +1188,9 @@
 </head>
 <body>
 
+<!-- Animated Wind Lines, Blowing Leaf, Flying Stick (stick 1.webp) & Flying Boy Overlay Container (Top Layer) -->
+<div class="weather-overlay" id="weatherOverlay"></div>
+
 <!-- Local WAV Audio File -->
 <audio id="bgAudio" loop preload="auto">
     <source src="All Through The Night (Piano).wav" type="audio/wav">
@@ -974,7 +1213,7 @@
 </div>
 
 <div class="app-container" id="app">
-    <header class="app-header">
+    <header class="app-header wind-sway-active">
         <div class="header-title-group">
             <h1 class="app-title">3J功課大屏</h1>
             <div class="clock-display" id="clockDisplay">--/--/---- --:--:--</div>
@@ -1002,7 +1241,7 @@
         </div>
     </header>
 
-    <section class="filter-section">
+    <section class="filter-section wind-sway-active">
         <div class="filter-row">
             <span class="filter-label">狀態篩選：</span>
             <div class="btn-group" id="statusFilterGroup">
@@ -1043,7 +1282,7 @@
         </div>
     </section>
 
-    <div class="stats-bar">
+    <div class="stats-bar wind-sway-active">
         <div class="stat-pill"><span style="color: var(--status-upcoming)">● 即將截止:</span> <span class="stat-count" id="countUpcoming" style="color: var(--status-upcoming)">0</span></div>
         <div class="stat-pill"><span style="color: var(--status-expired)">● 已截止:</span> <span class="stat-count" id="countExpired" style="color: var(--status-expired)">0</span></div>
         <div class="stat-pill"><span style="color: var(--status-pending)">● 待截止:</span> <span class="stat-count" id="countPending" style="color: var(--status-pending)">0</span></div>
@@ -1051,7 +1290,7 @@
         <div class="stat-pill"><span style="color: var(--status-unissued)">● 待發放:</span> <span class="stat-count" id="countUnissued" style="color: var(--status-unissued)">0</span></div>
     </div>
 
-    <main class="table-area" id="tableArea">
+    <main class="table-area wind-sway-active" id="tableArea">
         <button class="btn-add-row" onclick="addNewRow()">＋ 新增功課</button>
         <table>
             <thead>
@@ -1069,7 +1308,7 @@
         <div id="emptyMessage" class="empty-state" style="display: none;">沒有符合條件的功課記錄</div>
     </main>
 
-    <footer class="app-footer">
+    <footer class="app-footer wind-sway-active">
         <div id="recordCounter">顯示 0 項 / 共 0 項</div>
     </footer>
 </div>
@@ -1106,11 +1345,20 @@
             <span class="setting-label">主題顏色 (Theme Color):</span>
             <div class="theme-grid">
                 <button class="theme-btn active" id="theme-original" onclick="applyTheme('original')">預設 (Original)</button>
+                <button class="theme-btn" id="theme-autumn" onclick="applyTheme('autumn')">秋天 (Autumn)</button>
                 <button class="theme-btn" id="theme-dark-red" onclick="applyTheme('dark-red')">深紅 (Dark Red)</button>
                 <button class="theme-btn" id="theme-light-yellow" onclick="applyTheme('light-yellow')">淺黃 (Light Yellow)</button>
                 <button class="theme-btn" id="theme-light-blue" onclick="applyTheme('light-blue')">淺藍 (Light Blue)</button>
                 <button class="theme-btn" id="theme-notebook" onclick="applyTheme('notebook')">筆記本 (Notebook)</button>
             </div>
+        </div>
+
+        <div class="setting-group">
+            <span class="setting-label">特效設定 (Effects):</span>
+            <label class="setting-checkbox-label">
+                <input type="checkbox" id="windEffectToggle" checked onchange="toggleWindEffects(this.checked)">
+                <span>風勢與落葉效果 (Wind & Leaf Effects)</span>
+            </label>
         </div>
 
         <div class="modal-buttons">
@@ -1145,11 +1393,13 @@
     let userScale = parseFloat(localStorage.getItem("3j_font_scale")) || 1;
     let userTheme = localStorage.getItem("3j_theme") || "original";
     let userVolume = localStorage.getItem("3j_volume") !== null ? parseFloat(localStorage.getItem("3j_volume")) : 0.5;
+    let enableWindEffects = localStorage.getItem("3j_wind_effects") !== null ? localStorage.getItem("3j_wind_effects") === "true" : true;
     let isMusicPlaying = false;
 
     window.addEventListener("DOMContentLoaded", () => {
         loadUserSettings();
         initAudioPlayer();
+        initWeatherEffects();
         checkDisclaimerConsent();
         initSubjectFilterButtons();
         updateClock();
@@ -1167,6 +1417,89 @@
             checkAndAutoUpdateStatuses();
         }, 1000);
     });
+
+    /* --- Weather Effects (Wind Lines, Leaves, Sticks, Page Swinging & Continuous Flying Boy) --- */
+    function initWeatherEffects() {
+        const overlay = document.getElementById("weatherOverlay");
+        overlay.innerHTML = "";
+
+        // Generate 35 Wind Lines moving right-to-left fast
+        for (let i = 0; i < 35; i++) {
+            const wind = document.createElement("div");
+            wind.className = "wind-line";
+            wind.style.top = (Math.random() * 100) + "vh";
+            wind.style.width = (Math.random() * 250 + 150) + "px";
+            wind.style.animationDuration = (Math.random() * 1.2 + 0.8) + "s";
+            wind.style.animationDelay = (Math.random() * 4) + "s";
+            overlay.appendChild(wind);
+        }
+
+        // Generate 18 Leaf elements using leaf 1.webp moving right-to-left
+        for (let i = 0; i < 18; i++) {
+            const leaf = document.createElement("div");
+            leaf.className = "leaf-element";
+            leaf.style.top = (Math.random() * 95) + "vh";
+            const scale = Math.random() * 0.6 + 0.5;
+            leaf.style.width = (38 * scale) + "px";
+            leaf.style.height = (38 * scale) + "px";
+            leaf.style.animationDuration = (Math.random() * 3 + 2.5) + "s";
+            leaf.style.animationDelay = (Math.random() * 5) + "s";
+            overlay.appendChild(leaf);
+        }
+
+        // Generate 12 Flying Stick elements using stick 1.webp sharing exact leaf animation behavior
+        for (let i = 0; i < 12; i++) {
+            const stick = document.createElement("div");
+            stick.className = "stick-element";
+            stick.style.top = (Math.random() * 95) + "vh";
+            const scale = Math.random() * 0.6 + 0.5;
+            stick.style.width = (42 * scale) + "px";
+            stick.style.height = (42 * scale) + "px";
+            stick.style.animationDuration = (Math.random() * 3.5 + 2.5) + "s";
+            stick.style.animationDelay = (Math.random() * 6) + "s";
+            overlay.appendChild(stick);
+        }
+
+        // Generate Flying Boy element with smooth continuous height transitions and zero pausing time
+        const boy = document.createElement("div");
+        boy.className = "boy-element";
+        const initialTop = (Math.random() * 60 + 15) + "vh";
+        boy.style.setProperty('--boy-top', initialTop);
+        
+        // Dynamically shift height for the next pass seamless without pausing loop momentum
+        boy.addEventListener("animationiteration", () => {
+            requestAnimationFrame(() => {
+                const nextTop = (Math.random() * 60 + 15) + "vh";
+                boy.style.setProperty('--boy-top', nextTop);
+            });
+        });
+        
+        overlay.appendChild(boy);
+
+        applyWindEffects(enableWindEffects);
+    }
+
+    function toggleWindEffects(enabled) {
+        enableWindEffects = enabled;
+        applyWindEffects(enabled);
+        localStorage.setItem("3j_wind_effects", enabled);
+    }
+
+    function applyWindEffects(enabled) {
+        const overlay = document.getElementById("weatherOverlay");
+        const checkbox = document.getElementById("windEffectToggle");
+        if (checkbox) checkbox.checked = enabled;
+
+        const swayElements = document.querySelectorAll(".app-header, .filter-section, .stats-bar, .table-area, .app-footer");
+
+        if (enabled) {
+            overlay.classList.remove("disabled");
+            swayElements.forEach(el => el.classList.add("wind-sway-active"));
+        } else {
+            overlay.classList.add("disabled");
+            swayElements.forEach(el => el.classList.remove("wind-sway-active"));
+        }
+    }
 
     /* --- Audio Player Functionality --- */
     function initAudioPlayer() {
@@ -1227,6 +1560,7 @@
     function loadUserSettings() {
         applyFontSize(userScale);
         applyTheme(userTheme);
+        applyWindEffects(enableWindEffects);
     }
 
     function changeFontSize(val) {
@@ -1243,7 +1577,7 @@
 
     function applyTheme(themeName) {
         userTheme = themeName;
-        document.body.classList.remove('theme-dark-red', 'theme-light-yellow', 'theme-light-blue', 'theme-notebook');
+        document.body.classList.remove('theme-dark-red', 'theme-light-yellow', 'theme-light-blue', 'theme-notebook', 'theme-autumn');
         
         if (themeName !== 'original') {
             document.body.classList.add(`theme-${themeName}`);
@@ -1260,9 +1594,11 @@
         userScale = 1;
         userTheme = 'original';
         userVolume = 0.5;
+        enableWindEffects = true;
         applyFontSize(1);
         applyTheme('original');
         changeVolume(0.5);
+        toggleWindEffects(true);
     }
 
     function openSettingsModal() {
