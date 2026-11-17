@@ -1389,11 +1389,26 @@
     let currentSearchTerm = "";
     let isEditing = false;
 
-    // Local User Settings & Audio State
-    let userScale = parseFloat(localStorage.getItem("3j_font_scale")) || 1;
-    let userTheme = localStorage.getItem("3j_theme") || "original";
-    let userVolume = localStorage.getItem("3j_volume") !== null ? parseFloat(localStorage.getItem("3j_volume")) : 0.5;
-    let enableWindEffects = localStorage.getItem("3j_wind_effects") !== null ? localStorage.getItem("3j_wind_effects") === "true" : true;
+    // Particular User Settings State (Strictly isolated per user's local browser profile)
+    function getCurrentUserId() {
+        try {
+            let uid = localStorage.getItem("3j_particular_user_id");
+            if (!uid) {
+                uid = "user_" + Date.now().toString(36) + "_" + Math.random().toString(36).substring(2, 10);
+                localStorage.setItem("3j_particular_user_id", uid);
+            }
+            return uid;
+        } catch (err) {
+            return "session_user";
+        }
+    }
+
+    const USER_SETTINGS_STORAGE_KEY = `3j_user_settings_${getCurrentUserId()}`;
+
+    let userScale = 1;
+    let userTheme = "original";
+    let userVolume = 0.5;
+    let enableWindEffects = true;
     let isMusicPlaying = false;
 
     window.addEventListener("DOMContentLoaded", () => {
@@ -1480,9 +1495,9 @@
     }
 
     function toggleWindEffects(enabled) {
-        enableWindEffects = enabled;
-        applyWindEffects(enabled);
-        localStorage.setItem("3j_wind_effects", enabled);
+        enableWindEffects = Boolean(enabled);
+        applyWindEffects(enableWindEffects);
+        saveUserSettings();
     }
 
     function applyWindEffects(enabled) {
@@ -1536,8 +1551,10 @@
     function changeVolume(val) {
         userVolume = parseFloat(val);
         const audio = document.getElementById("bgAudio");
-        audio.volume = userVolume;
-        localStorage.setItem("3j_volume", userVolume);
+        const slider = document.getElementById("volumeSlider");
+        if (audio) audio.volume = userVolume;
+        if (slider) slider.value = userVolume;
+        saveUserSettings();
     }
 
     function updateMusicUI() {
@@ -1556,17 +1573,67 @@
         }
     }
 
-    /* --- Device Preferences / Settings Management --- */
+    /* --- Particular User Preferences / Settings Management --- */
+    function saveUserSettings() {
+        try {
+            const personalSettings = {
+                userId: getCurrentUserId(),
+                fontScale: userScale,
+                theme: userTheme,
+                volume: userVolume,
+                windEffects: enableWindEffects,
+                updatedAt: new Date().toISOString()
+            };
+            localStorage.setItem(USER_SETTINGS_STORAGE_KEY, JSON.stringify(personalSettings));
+        } catch (err) {
+            console.warn("Unable to save settings for this user:", err);
+        }
+    }
+
     function loadUserSettings() {
+        try {
+            const savedRaw = localStorage.getItem(USER_SETTINGS_STORAGE_KEY);
+            if (savedRaw) {
+                const parsed = JSON.parse(savedRaw);
+                if (typeof parsed.fontScale === "number" && !isNaN(parsed.fontScale)) {
+                    userScale = parsed.fontScale;
+                }
+                if (typeof parsed.theme === "string") {
+                    userTheme = parsed.theme;
+                }
+                if (typeof parsed.volume === "number" && !isNaN(parsed.volume)) {
+                    userVolume = parsed.volume;
+                }
+                if (typeof parsed.windEffects === "boolean") {
+                    enableWindEffects = parsed.windEffects;
+                }
+            } else {
+                // Migrate legacy local settings if any exist for this user
+                const legacyScale = parseFloat(localStorage.getItem("3j_font_scale"));
+                const legacyTheme = localStorage.getItem("3j_theme");
+                const legacyVolume = localStorage.getItem("3j_volume");
+                const legacyWind = localStorage.getItem("3j_wind_effects");
+
+                if (!isNaN(legacyScale)) userScale = legacyScale;
+                if (legacyTheme) userTheme = legacyTheme;
+                if (legacyVolume !== null && !isNaN(parseFloat(legacyVolume))) userVolume = parseFloat(legacyVolume);
+                if (legacyWind !== null) enableWindEffects = legacyWind === "true";
+
+                saveUserSettings();
+            }
+        } catch (err) {
+            console.warn("Unable to load settings for this user:", err);
+        }
+
         applyFontSize(userScale);
-        applyTheme(userTheme);
+        applyTheme(userTheme, false);
         applyWindEffects(enableWindEffects);
     }
 
     function changeFontSize(val) {
         userScale = parseFloat(val);
         applyFontSize(userScale);
-        localStorage.setItem("3j_font_scale", userScale);
+        saveUserSettings();
     }
 
     function applyFontSize(scale) {
@@ -1575,7 +1642,7 @@
         document.getElementById("fontSizeValue").textContent = Math.round(scale * 100) + "%";
     }
 
-    function applyTheme(themeName) {
+    function applyTheme(themeName, shouldSave = true) {
         userTheme = themeName;
         document.body.classList.remove('theme-dark-red', 'theme-light-yellow', 'theme-light-blue', 'theme-notebook', 'theme-autumn');
         
@@ -1587,7 +1654,9 @@
         const activeBtn = document.getElementById(`theme-${themeName}`);
         if (activeBtn) activeBtn.classList.add('active');
 
-        localStorage.setItem("3j_theme", themeName);
+        if (shouldSave) {
+            saveUserSettings();
+        }
     }
 
     function resetUserSettings() {
@@ -1595,10 +1664,13 @@
         userTheme = 'original';
         userVolume = 0.5;
         enableWindEffects = true;
-        applyFontSize(1);
-        applyTheme('original');
-        changeVolume(0.5);
-        toggleWindEffects(true);
+
+        applyFontSize(userScale);
+        applyTheme(userTheme, false);
+        changeVolume(userVolume);
+        applyWindEffects(enableWindEffects);
+
+        saveUserSettings();
     }
 
     function openSettingsModal() {
