@@ -761,7 +761,7 @@
             width: 100%;
             border-collapse: collapse;
             font-size: calc(15px * var(--font-scale));
-            min-width: 650px;
+            min-width: 710px;
         }
 
         thead {
@@ -779,16 +779,18 @@
             border-bottom: 2px solid var(--border-color);
         }
 
-        th:nth-child(1) { text-align: center; width: 110px; }
-        th:nth-child(2) { text-align: left; }
-        th:nth-child(3) { text-align: center; width: 160px; }
-        th:nth-child(4) { text-align: center; width: 130px; }
+        th:nth-child(1) { text-align: center; width: 65px; }
+        th:nth-child(2) { text-align: center; width: 110px; }
+        th:nth-child(3) { text-align: left; }
+        th:nth-child(4) { text-align: center; width: 160px; }
         th:nth-child(5) { text-align: center; width: 130px; }
+        th:nth-child(6) { text-align: center; width: 130px; }
         .th-actions { text-align: center; width: 80px; display: none; }
 
         tbody tr {
             height: 42px;
             border-bottom: 1px solid var(--border-color);
+            transition: opacity 0.38s ease, background-color 0.2s ease;
         }
 
         tbody tr:nth-child(even) { background-color: var(--row-even); }
@@ -796,16 +798,75 @@
 
         tbody tr:hover { background-color: rgba(0, 0, 0, 0.04); }
 
+        /* Smooth Homework Strikethrough Animation */
+        tbody tr.hw-completed {
+            opacity: 0.56;
+        }
+
         td {
             padding: 8px 16px;
             vertical-align: middle;
         }
 
-        td:nth-child(1) { text-align: center; color: var(--table-id-color); font-weight: 400; }
-        td:nth-child(2) { text-align: left; color: var(--text-main); }
-        td:nth-child(3) { text-align: center; color: var(--text-main); }
-        td:nth-child(4) { text-align: center; color: var(--table-date-color); font-weight: 400; }
-        td:nth-child(5) { text-align: center; font-weight: 400; }
+        td.strike-cell {
+            position: relative;
+        }
+
+        td.strike-cell::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            height: 2px;
+            background-color: currentColor;
+            transform: scaleX(0);
+            transform-origin: left center;
+            transition: transform 0.38s cubic-bezier(0.25, 0.8, 0.25, 1);
+            pointer-events: none;
+        }
+
+        td:nth-child(2).strike-cell::after {
+            left: 12px;
+            width: calc(100% - 12px);
+        }
+
+        td:nth-child(6).strike-cell::after {
+            left: 0;
+            width: calc(100% - 12px);
+        }
+
+        tbody tr.hw-completed td.strike-cell::after {
+            transform: scaleX(1);
+        }
+
+        .hw-checkbox {
+            width: calc(17px * var(--font-scale));
+            height: calc(17px * var(--font-scale));
+            cursor: pointer;
+            accent-color: #0080ff;
+            vertical-align: middle;
+            transition: transform 0.15s ease;
+        }
+
+        .hw-checkbox:hover {
+            transform: scale(1.15);
+        }
+
+        body.theme-autumn .hw-checkbox {
+            accent-color: #dd6b20;
+        }
+
+        body.theme-notebook .hw-checkbox {
+            accent-color: #000000;
+        }
+
+        td:nth-child(1) { text-align: center; }
+        td:nth-child(2) { text-align: center; color: var(--table-id-color); font-weight: 400; }
+        td:nth-child(3) { text-align: left; color: var(--text-main); }
+        td:nth-child(4) { text-align: center; color: var(--text-main); }
+        td:nth-child(5) { text-align: center; color: var(--table-date-color); font-weight: 400; }
+        td:nth-child(6) { text-align: center; font-weight: 400; }
         .td-actions { text-align: center; display: none; }
 
         /* Status Colors mapping across themes */
@@ -1295,6 +1356,7 @@
         <table>
             <thead>
                 <tr>
+                    <th>完成</th>
                     <th>編號</th>
                     <th>課業</th>
                     <th>科目</th>
@@ -1389,7 +1451,7 @@
     let currentSearchTerm = "";
     let isEditing = false;
 
-    // Particular User Settings State (Strictly isolated per user's local browser profile)
+    // Particular User Settings & Device-Only Checkbox State
     function getCurrentUserId() {
         try {
             let uid = localStorage.getItem("3j_particular_user_id");
@@ -1404,7 +1466,9 @@
     }
 
     const USER_SETTINGS_STORAGE_KEY = `3j_user_settings_${getCurrentUserId()}`;
+    const USER_CHECKED_HW_STORAGE_KEY = `3j_checked_homework_${getCurrentUserId()}`;
 
+    let checkedHomeworkMap = {};
     let userScale = 1;
     let userTheme = "original";
     let userVolume = 0.5;
@@ -1413,6 +1477,7 @@
 
     window.addEventListener("DOMContentLoaded", () => {
         loadUserSettings();
+        loadCheckedHomeworkMap();
         initAudioPlayer();
         initWeatherEffects();
         checkDisclaimerConsent();
@@ -1432,6 +1497,45 @@
             checkAndAutoUpdateStatuses();
         }, 1000);
     });
+
+    /* --- Device-Only Homework Checkbox & Strikethrough Management --- */
+    function loadCheckedHomeworkMap() {
+        try {
+            const raw = localStorage.getItem(USER_CHECKED_HW_STORAGE_KEY);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === "object") {
+                    checkedHomeworkMap = parsed;
+                }
+            }
+        } catch (err) {
+            console.warn("Unable to load checked homework status:", err);
+            checkedHomeworkMap = {};
+        }
+    }
+
+    function saveCheckedHomeworkMap() {
+        try {
+            localStorage.setItem(USER_CHECKED_HW_STORAGE_KEY, JSON.stringify(checkedHomeworkMap));
+        } catch (err) {
+            console.warn("Unable to save checked homework status:", err);
+        }
+    }
+
+    function toggleHomeworkCheckByIndex(index, checkboxEl) {
+        const item = homeworkList[index];
+        if (!item || !item.id) return;
+
+        const tr = checkboxEl.closest("tr");
+        if (checkboxEl.checked) {
+            checkedHomeworkMap[item.id] = true;
+            if (tr) tr.classList.add("hw-completed");
+        } else {
+            delete checkedHomeworkMap[item.id];
+            if (tr) tr.classList.remove("hw-completed");
+        }
+        saveCheckedHomeworkMap();
+    }
 
     /* --- Weather Effects (Wind Lines, Leaves, Sticks, Page Swinging & Continuous Flying Boy) --- */
     function initWeatherEffects() {
@@ -1741,6 +1845,11 @@
         const target = homeworkList[index];
         homeworkList.splice(index, 1);
 
+        if (target && target.id && checkedHomeworkMap[target.id]) {
+            delete checkedHomeworkMap[target.id];
+            saveCheckedHomeworkMap();
+        }
+
         try {
             await window.sql`DELETE FROM homework WHERE id = ${target.id};`;
             await updateLastEditTimestamp();
@@ -1753,6 +1862,12 @@
     async function updateFieldValue(index, field, value) {
         const oldId = homeworkList[index].id;
         homeworkList[index][field] = value;
+
+        if (field === 'id' && oldId !== value && checkedHomeworkMap[oldId]) {
+            delete checkedHomeworkMap[oldId];
+            if (value) checkedHomeworkMap[value] = true;
+            saveCheckedHomeworkMap();
+        }
 
         try {
             if (field === 'id') {
@@ -2017,6 +2132,11 @@
         filteredList.forEach((item) => {
             const actualIndex = homeworkList.indexOf(item);
             const tr = document.createElement("tr");
+            const isChecked = Boolean(item.id && checkedHomeworkMap[item.id]);
+
+            if (isChecked) {
+                tr.classList.add("hw-completed");
+            }
 
             if (isEditing) {
                 let subjectOptions = SUBJECT_LIST.filter(s => s !== "全部").map(s => 
@@ -2028,6 +2148,7 @@
                 ).join("");
 
                 tr.innerHTML = `
+                    <td><input type="checkbox" class="hw-checkbox" ${isChecked ? 'checked' : ''} onchange="toggleHomeworkCheckByIndex(${actualIndex}, this)"></td>
                     <td><input class="editable-input" value="${item.id || ''}" onchange="updateFieldValue(${actualIndex}, 'id', this.value)"></td>
                     <td><input class="editable-input" value="${item.task || ''}" onchange="updateFieldValue(${actualIndex}, 'task', this.value)"></td>
                     <td>
@@ -2048,11 +2169,12 @@
             } else {
                 const statusClass = item.status ? `status-${item.status}` : '';
                 tr.innerHTML = `
-                    <td>${item.id || ''}</td>
-                    <td>${item.task || ''}</td>
-                    <td>${item.subject || ''}</td>
-                    <td>${item.date || ''}</td>
-                    <td class="${statusClass}">${item.status || ''}</td>
+                    <td><input type="checkbox" class="hw-checkbox" ${isChecked ? 'checked' : ''} onchange="toggleHomeworkCheckByIndex(${actualIndex}, this)"></td>
+                    <td class="strike-cell">${item.id || ''}</td>
+                    <td class="strike-cell">${item.task || ''}</td>
+                    <td class="strike-cell">${item.subject || ''}</td>
+                    <td class="strike-cell">${item.date || ''}</td>
+                    <td class="strike-cell ${statusClass}">${item.status || ''}</td>
                     <td class="td-actions"></td>
                 `;
             }
